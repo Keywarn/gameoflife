@@ -6,11 +6,13 @@
 #include <stdio.h>
 #include "pgmIO.h"
 #include "i2c.h"
+//#include "mod.h"
+#include "assert.h"
 
 #define  IMHT 16                  //image height
 #define  IMWD 16                  //image width
 
-typedef unsigned char uchar;      //using uchar as shorthand
+typedef unsigned char uchar;
 
 port p_scl = XS1_PORT_1E;         //interface ports to orientation
 port p_sda = XS1_PORT_1F;
@@ -31,6 +33,17 @@ port p_sda = XS1_PORT_1F;
 // Read Image from PGM file from path infname[] to channel c_out
 //
 /////////////////////////////////////////////////////////////////////////////////////////
+uchar mod(uchar val, int dval, uchar divisor) {
+    if(val == 0 && dval == -1) return(divisor-1);
+    if(val == divisor-1 && dval == 1) return(0);
+    return(val + dval);
+}
+
+void modTest(){
+    assert (mod(10,1,11) == 0);
+    assert (mod(5, 1, 10) == 6);
+    assert (mod(0,-1,10) == 9);
+}
 void DataInStream(char infname[], chanend c_out)
 {
   int res;
@@ -60,6 +73,34 @@ void DataInStream(char infname[], chanend c_out)
   return;
 }
 
+uchar getAbove(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getAboveRight(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getRight(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getBelowRight(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getBelow(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getBelowLeft(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getLeft(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar getAboveLeft(uchar map[IMHT][IMWD], int x, int y) {
+
+}
+uchar checkCell(uchar map[IMHT][IMWD], int x, int y) {
+
+    return 0;
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Start your implementation by changing this function to implement the game of life
@@ -80,13 +121,24 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   //This just inverts every pixel, but you should
   //change the image according to the "Game of Life"
   printf( "Processing...\n" );
+  uchar map[IMHT][IMWD];
+  uchar newMap[IMHT][IMWD];
   for( int y = 0; y < IMHT; y++ ) {   //go through all lines
     for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
       c_in :> val;                    //read the pixel value
+
+      map[y][x] = val;
+
+
       c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
   }
   printf( "\nOne processing round completed...\n" );
+  for( int y = 0; y < IMHT; y++ ) {
+      for( int x = 0; x < IMWD; x++ ) {
+        checkCell(map, y, x);
+      }
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -171,20 +223,21 @@ void orientation( client interface i2c_master_if i2c, chanend toDist) {
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
+    modTest();
 
-i2c_master_if i2c[1];               //interface to orientation
+    i2c_master_if i2c[1];               //interface to orientation
 
-char infname[] = "test.pgm";     //put your input image path here
-char outfname[] = "testout.pgm"; //put your output image path here
-chan c_inIO, c_outIO, c_control;    //extend your channel definitions here
+    char infname[] = "test.pgm";     //put your input image path here
+    char outfname[] = "testout.pgm"; //put your output image path here
+    chan c_inIO, c_outIO, c_control;    //extend your channel definitions here
 
-par {
-    i2c_master(i2c, 1, p_scl, p_sda, 10);   //server thread providing orientation data
-    orientation(i2c[0],c_control);        //client thread reading orientation data
-    DataInStream(infname, c_inIO);          //thread to read in a PGM image
-    DataOutStream(outfname, c_outIO);       //thread to write out a PGM image
-    distributor(c_inIO, c_outIO, c_control);//thread to coordinate work on image
-  }
+    par {
+        i2c_master(i2c, 1, p_scl, p_sda, 10);   //server thread providing orientation data
+        orientation(i2c[0],c_control);        //client thread reading orientation data
+        DataInStream(infname, c_inIO);          //thread to read in a PGM image
+        DataOutStream(outfname, c_outIO);       //thread to write out a PGM image
+        distributor(c_inIO, c_outIO, c_control);//thread to coordinate work on image
+      }
 
-  return 0;
+      return 0;
 }
