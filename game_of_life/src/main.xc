@@ -32,6 +32,9 @@ enum direction {above, aboveRight, right, belowRight, below, belowLeft, left, ab
 typedef enum direction direction;
 dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
 
+enum state {alive = 255, dead = 0};
+typedef enum state state;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Read Image from PGM file from path infname[] to channel c_out
@@ -54,8 +57,8 @@ void modTest(){
     assert (mod(5, 1, 10) == 6);
     assert (mod(0,-1,10) == 9);
 }
-void DataInStream(char infname[], chanend c_out)
-{
+
+void DataInStream(char infname[], chanend c_out) {
   int res;
   uchar line[ IMWD ];
   printf( "DataInStream: Start...\n" );
@@ -84,7 +87,7 @@ void DataInStream(char infname[], chanend c_out)
 }
 
 int getNeighbour(uchar map[IMHT][IMWD], int y, int x, direction dir){
-    return (map[mod(y,dirMod[dir][0], IMHT)][mod(x,dirMod[dir][1], IMWD)]) / 255;
+    return (map[mod(y,dirMod[dir][0], IMHT)][mod(x,dirMod[dir][1], IMWD)]) / alive;
 }
 int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
     int sum = 0;
@@ -122,16 +125,28 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
       c_in :> val;                    //read the pixel value
 
       map[y][x] = val;
-      c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
+      //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
   }
-  printf( "\nOne processing round completed...\n" );
+  printf( "\nOne input round completed...\n" );
 
   for( int y = 0; y < IMHT; y++ ) {
+      printf("\n");
       for( int x = 0; x < IMWD; x++ ) {
+          newMap[y][x] = dead;
           int neighbours = getNeighbours(map, y, x);
+          int isAlive = map[y][x] == alive;
+          if (neighbours < 2 && isAlive) newMap[y][x] = dead;
+          else if (isAlive && (neighbours == 2 || neighbours == 3)) newMap[y][x] = alive;
+          else if(neighbours > 3 && isAlive) newMap[y][x] = dead;
+          else if(neighbours == 3 && !isAlive) newMap[y][x] = alive;
+          printf("-%4.1d", newMap[y][x]);
+
+          c_out <: newMap[y][x];
       }
   }
+
+  printf("\n Output complete \n");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +173,7 @@ void DataOutStream(char outfname[], chanend c_in)
       c_in :> line[ x ];
     }
     _writeoutline( line, IMWD );
-    printf( "DataOutStream: Line written...\n" );
+    //printf( "DataOutStream: Line written...\n" );         uncomment later
   }
 
   //Close the PGM image
