@@ -411,23 +411,6 @@
 </fInfo>
 <fInfo name="ack_write_request" global="true" interface="i2c_slave_callback_if" specialize="false" noreturn="false" doNotSpecialize="false" numParams="0">
 </fInfo>
-<fInfo name="checkCell" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-</fInfo>
 <fInfo name="delay_microseconds" global="true" specialize="false" noreturn="false" doNotSpecialize="true" numParams="1">
   <arg num="0" specialize="false">
     <values>
@@ -463,115 +446,42 @@
     </values>
   </arg>
 </fInfo>
-<fInfo name="getAbove" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
+<fInfo name="getNeighbour" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="4">
   <arg num="0" specialize="false">
     <values>
+      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
+      <value type="unknown"/>
     </values>
   </arg>
   <arg num="2" specialize="false">
     <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="3" specialize="false">
+    <values>
+      <value type="unknown"/>
     </values>
   </arg>
 </fInfo>
-<fInfo name="getAboveLeft" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
+<fInfo name="getNeighbours" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
+      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
+      <value type="unknown"/>
     </values>
   </arg>
   <arg num="2" specialize="false">
     <values>
-    </values>
-  </arg>
-</fInfo>
-<fInfo name="getAboveRight" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
-    </values>
-  </arg>
-</fInfo>
-<fInfo name="getBelow" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
-    </values>
-  </arg>
-</fInfo>
-<fInfo name="getBelowLeft" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
-    </values>
-  </arg>
-</fInfo>
-<fInfo name="getBelowRight" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
-    </values>
-  </arg>
-</fInfo>
-<fInfo name="getLeft" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
-    </values>
-  </arg>
-</fInfo>
-<fInfo name="getRight" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
-  <arg num="0" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="1" specialize="false">
-    <values>
-    </values>
-  </arg>
-  <arg num="2" specialize="false">
-    <values>
+      <value type="unknown"/>
     </values>
   </arg>
 </fInfo>
@@ -770,6 +680,7 @@
 <fInfo name="mod" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
+      <value type="unknown"/>
       <value type="intval"><intval isSigned="true" val="0"/></value>
       <value type="intval"><intval isSigned="true" val="5"/></value>
       <value type="intval"><intval isSigned="true" val="10"/></value>
@@ -777,6 +688,7 @@
   </arg>
   <arg num="1" specialize="false">
     <values>
+      <value type="unknown"/>
       <value type="intval"><intval isSigned="true" val="1"/></value>
       <value type="intval"><intval isSigned="true" val="-1"/></value>
     </values>
@@ -785,6 +697,7 @@
     <values>
       <value type="intval"><intval isSigned="true" val="10"/></value>
       <value type="intval"><intval isSigned="true" val="11"/></value>
+      <value type="intval"><intval isSigned="true" val="16"/></value>
     </values>
   </arg>
 </fInfo>

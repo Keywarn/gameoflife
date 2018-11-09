@@ -28,12 +28,22 @@ port p_sda = XS1_PORT_1F;
 #define FXOS8700EQ_OUT_Z_MSB 0x5
 #define FXOS8700EQ_OUT_Z_LSB 0x6
 
+enum direction {above, aboveRight, right, belowRight, below, belowLeft, left, aboveLeft};
+typedef enum direction direction;
+dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Read Image from PGM file from path infname[] to channel c_out
 //
 /////////////////////////////////////////////////////////////////////////////////////////
+
+//MOD is really slow
 uchar mod(uchar val, int dval, uchar divisor) {
+    if(dval > 1 || dval < -1) {
+        printf("Incorrect dval used, shutting down");
+        exit(1);
+    }
     if(val == 0 && dval == -1) return(divisor-1);
     if(val == divisor-1 && dval == 1) return(0);
     return(val + dval);
@@ -73,33 +83,17 @@ void DataInStream(char infname[], chanend c_out)
   return;
 }
 
-uchar getAbove(uchar map[IMHT][IMWD], int x, int y) {
-
+int getNeighbour(uchar map[IMHT][IMWD], int y, int x, direction dir){
+    return (map[mod(y,dirMod[dir][0], IMHT)][mod(x,dirMod[dir][1], IMWD)]) / 255;
 }
-uchar getAboveRight(uchar map[IMHT][IMWD], int x, int y) {
+int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
+    int sum = 0;
 
-}
-uchar getRight(uchar map[IMHT][IMWD], int x, int y) {
+    for (int i = 0; i < 8; i++){
+        sum += getNeighbour(map, y, x, i);
+    }
 
-}
-uchar getBelowRight(uchar map[IMHT][IMWD], int x, int y) {
-
-}
-uchar getBelow(uchar map[IMHT][IMWD], int x, int y) {
-
-}
-uchar getBelowLeft(uchar map[IMHT][IMWD], int x, int y) {
-
-}
-uchar getLeft(uchar map[IMHT][IMWD], int x, int y) {
-
-}
-uchar getAboveLeft(uchar map[IMHT][IMWD], int x, int y) {
-
-}
-uchar checkCell(uchar map[IMHT][IMWD], int x, int y) {
-
-    return 0;
+    return sum;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -128,15 +122,14 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
       c_in :> val;                    //read the pixel value
 
       map[y][x] = val;
-
-
       c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
   }
   printf( "\nOne processing round completed...\n" );
+
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD; x++ ) {
-        checkCell(map, y, x);
+          int neighbours = getNeighbours(map, y, x);
       }
   }
 }
