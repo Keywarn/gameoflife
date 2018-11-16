@@ -99,7 +99,37 @@ int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
     return sum;
 }
 
+int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], val) {
+    int sum = 0;
+    for (int dir = 0; dir < 8; dir++){
+        sum += getNeighbourRow(row, above, below, dir, val);
+        }
+}
 
+int getNeighbourRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int dir, int val) {
+    if (dirMod[dir][0] == 1) {
+        return above[mod(val, dirMod[dir][1], IMWD)];
+    }
+    else if (dirMod[dir][0] == -1) {
+        return below[mod(val, dirMod[dir][1], IMWD)];
+    }
+    else {
+        return row[mod(val, dirMod[dir][1], IMWD)];
+    }
+}
+
+unsigned char * worker(unsigned char *above, unsigned char *below, unsigned char *row){
+    uchar newRow[IMWD];
+    for (int val = 0; val < IMWD; val++){
+        newRow[val] = dead;
+        int neighbours = getNeighboursRow(row, above, below, val);
+        int isAlive = row[val] == alive;
+        if (neighbours < 2 && isAlive) newRow[val] = dead;
+        else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[val] = alive;
+        else if(neighbours > 3 && isAlive) newRow[Val] = dead;
+        else if(neighbours == 3 && !isAlive) newRow[Val] = alive;
+    }
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Start your implementation by changing this function to implement the game of life
