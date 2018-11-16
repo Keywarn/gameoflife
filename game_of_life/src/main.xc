@@ -75,9 +75,9 @@ void DataInStream(char infname[], chanend c_out) {
     _readinline( line, IMWD );
     for( int x = 0; x < IMWD; x++ ) {
       c_out <: line[ x ];
-      printf( "-%4.1d ", line[ x ] ); //show image values
+      //printf( "-%4.1d ", line[ x ] ); //show image values
     }
-    printf( "\n" );
+    //printf( "\n" );
   }
 
   //Close PGM image file
@@ -98,6 +98,8 @@ int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
 
     return sum;
 }
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Start your implementation by changing this function to implement the game of life
@@ -114,6 +116,10 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   printf( "Waiting for Board Tilt...\n" );
   fromAcc :> int value;
 
+  unsigned int time;
+  timer t;
+  t :> time;
+
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
   //change the image according to the "Game of Life"
@@ -128,23 +134,36 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
       //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
   }
-  printf( "\nOne input round completed...\n" );
+
+  for (int i = 0; i < 1; i++) {
+      for( int y = 0; y < IMHT; y++ ) {
+          //printf("\n");
+          for( int x = 0; x < IMWD; x++ ) {
+              newMap[y][x] = dead;
+              int neighbours = getNeighbours(map, y, x);
+              int isAlive = map[y][x] == alive;
+              if (neighbours < 2 && isAlive) newMap[y][x] = dead;
+              else if (isAlive && (neighbours == 2 || neighbours == 3)) newMap[y][x] = alive;
+              else if(neighbours > 3 && isAlive) newMap[y][x] = dead;
+              else if(neighbours == 3 && !isAlive) newMap[y][x] = alive;
+              //printf("-%4.1d", newMap[y][x]);
+          }
+      }
+      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
+      //printf( "\nOne round completed...\n" );
+  }
 
   for( int y = 0; y < IMHT; y++ ) {
-      printf("\n");
       for( int x = 0; x < IMWD; x++ ) {
-          newMap[y][x] = dead;
-          int neighbours = getNeighbours(map, y, x);
-          int isAlive = map[y][x] == alive;
-          if (neighbours < 2 && isAlive) newMap[y][x] = dead;
-          else if (isAlive && (neighbours == 2 || neighbours == 3)) newMap[y][x] = alive;
-          else if(neighbours > 3 && isAlive) newMap[y][x] = dead;
-          else if(neighbours == 3 && !isAlive) newMap[y][x] = alive;
-          printf("-%4.1d", newMap[y][x]);
-
           c_out <: newMap[y][x];
       }
   }
+
+
+  unsigned int newTime;
+  t :> newTime;
+
+  printf("Time was: %d\n", (newTime-time)/1000000);
 
   printf("\n Output complete \n");
 }
@@ -216,11 +235,12 @@ void orientation( client interface i2c_master_if i2c, chanend toDist) {
     int x = read_acceleration(i2c, FXOS8700EQ_OUT_X_MSB);
 
     //send signal to distributor after first tilt
+
     if (!tilted) {
-      if (x>30) {
+      //if (x>30) {
         tilted = 1 - tilted;
         toDist <: 1;
-      }
+      //}
     }
   }
 }
