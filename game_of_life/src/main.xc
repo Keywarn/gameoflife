@@ -167,6 +167,8 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
+  //FIRST SEQUENTIAL ATTEMPT
+
 //  for (int i = 0; i < 1; i++) {
 //      for( int y = 0; y < IMHT; y++ ) {
 //          //printf("\n");
@@ -186,6 +188,9 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 //  }
   int inc = IMHT/4;
   int leftover = IMHT % inc;
+
+  //PARALLEL ATTEMPT
+
 //  for (int gen = 0; gen < 1; gen++){
 //      uchar newMap[IMHT][IMWD];
 //      par(int y=0; y < IMHT; y+= IMHT/4) {
@@ -197,6 +202,9 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 //      }
 //      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
 //  }
+
+  //PARALLEL APROACH BUT IN SEQUENTIAL FOR DEBUG
+
   for (int gen = 0; gen < 1; gen++){
         uchar newMap[IMHT][IMWD];
         for(int y=0; y < IMHT; y+= IMHT/4) {
