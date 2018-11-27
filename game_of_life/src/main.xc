@@ -99,12 +99,7 @@ int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
     return sum;
 }
 
-int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], val) {
-    int sum = 0;
-    for (int dir = 0; dir < 8; dir++){
-        sum += getNeighbourRow(row, above, below, dir, val);
-        }
-}
+
 
 int getNeighbourRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int dir, int val) {
     if (dirMod[dir][0] == 1) {
@@ -118,7 +113,14 @@ int getNeighbourRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int d
     }
 }
 
-unsigned char * worker(unsigned char *above, unsigned char *below, unsigned char *row){
+int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int val) {
+    int sum = 0;
+    for (int dir = 0; dir < 8; dir++){
+        sum += getNeighbourRow(row, above, below, dir, val);
+        }
+}
+
+unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMWD], unsigned char row[IMWD]){
     uchar newRow[IMWD];
     for (int val = 0; val < IMWD; val++){
         newRow[val] = dead;
@@ -126,8 +128,8 @@ unsigned char * worker(unsigned char *above, unsigned char *below, unsigned char
         int isAlive = row[val] == alive;
         if (neighbours < 2 && isAlive) newRow[val] = dead;
         else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[val] = alive;
-        else if(neighbours > 3 && isAlive) newRow[Val] = dead;
-        else if(neighbours == 3 && !isAlive) newRow[Val] = alive;
+        else if(neighbours > 3 && isAlive) newRow[val] = dead;
+        else if(neighbours == 3 && !isAlive) newRow[val] = alive;
     }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +146,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
   printf( "Waiting for Board Tilt...\n" );
-  fromAcc :> int value;
+  //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
 
   unsigned int time;
   timer t;
@@ -155,7 +157,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   //change the image according to the "Game of Life"
   printf( "Processing...\n" );
   uchar map[IMHT][IMWD];
-  uchar newMap[IMHT][IMWD];
+  //uchar newMap[IMHT][IMWD];
   for( int y = 0; y < IMHT; y++ ) {   //go through all lines
     for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
       c_in :> val;                    //read the pixel value
@@ -165,27 +167,51 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
-  for (int i = 0; i < 1; i++) {
-      for( int y = 0; y < IMHT; y++ ) {
-          //printf("\n");
-          for( int x = 0; x < IMWD; x++ ) {
-              newMap[y][x] = dead;
-              int neighbours = getNeighbours(map, y, x);
-              int isAlive = map[y][x] == alive;
-              if (neighbours < 2 && isAlive) newMap[y][x] = dead;
-              else if (isAlive && (neighbours == 2 || neighbours == 3)) newMap[y][x] = alive;
-              else if(neighbours > 3 && isAlive) newMap[y][x] = dead;
-              else if(neighbours == 3 && !isAlive) newMap[y][x] = alive;
-              //printf("-%4.1d", newMap[y][x]);
-          }
-      }
-      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
-      //printf( "\nOne round completed...\n" );
-  }
+//  for (int i = 0; i < 1; i++) {
+//      for( int y = 0; y < IMHT; y++ ) {
+//          //printf("\n");
+//          for( int x = 0; x < IMWD; x++ ) {
+//              newMap[y][x] = dead;
+//              int neighbours = getNeighbours(map, y, x);
+//              int isAlive = map[y][x] == alive;
+//              if (neighbours < 2 && isAlive) newMap[y][x] = dead;
+//              else if (isAlive && (neighbours == 2 || neighbours == 3)) newMap[y][x] = alive;
+//              else if(neighbours > 3 && isAlive) newMap[y][x] = dead;
+//              else if(neighbours == 3 && !isAlive) newMap[y][x] = alive;
+//              //printf("-%4.1d", newMap[y][x]);
+//          }
+//      }
+//      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
+//      //printf( "\nOne round completed...\n" );
+//  }
+  int inc = IMHT/4;
+  int leftover = IMHT % inc;
+//  for (int gen = 0; gen < 1; gen++){
+//      uchar newMap[IMHT][IMWD];
+//      par(int y=0; y < IMHT; y+= IMHT/4) {
+//          for(int i = y; i <y+inc; i++){
+//              printf("y= %d, i= %d\n",y,i);
+//              memcpy(newMap[i],worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
+//          }
+//
+//      }
+//      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
+//  }
+  for (int gen = 0; gen < 1; gen++){
+        uchar newMap[IMHT][IMWD];
+        for(int y=0; y < IMHT; y+= IMHT/4) {
+            for(int i = y; i <y+inc; i++){
+                printf("y= %d, i= %d\n",y,i);
+                memcpy(newMap,worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
+            }
+
+        }
+        memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
+    }
 
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD; x++ ) {
-          c_out <: newMap[y][x];
+          c_out <: map[y][x];
       }
   }
 
