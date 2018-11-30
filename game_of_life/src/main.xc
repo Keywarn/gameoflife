@@ -184,7 +184,6 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
                 else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
                 else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
             }
-            printf("\n");
         }
 
         // copy newRow -> current
@@ -229,24 +228,18 @@ void farmerNew (chanend dist[]) {
                         dist[i] :> newMap[part][y][x];
                     }
                 }
-                printf("\npart: %d\n", part);
             }
         }
 
         // TESTING: print arr
-        for (int s=0; s < SPLIT; s++) {
+        /*for (int s=0; s < SPLIT; s++) {
             for (int y=0; y < PART_SIZE; y++) {
                 for (int x=0; x < IMWD; x++) {
                     printf("%d, ", newMap[s][y][x]);
                 }
                 printf("\n");
             }
-        }
-
-        printf("\n");
-        for (int i=0; i < IMWD; i++)
-            printf("%d, ", newMap[mod(2, -1, SPLIT)][PART_SIZE - 1][i]);
-        printf("\n");
+        }*/
 
         // send rowTop & rowBottom
         for (int s=0; s < SPLIT; s++) {
@@ -260,6 +253,8 @@ void farmerNew (chanend dist[]) {
             }
         }
     }
+
+    // communicate farmer -> distributor method
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -287,7 +282,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   //change the image according to the "Game of Life"
   printf( "Processing...\n" );
   uchar map[IMHT][IMWD];
-  //uchar newMap[IMHT][IMWD];
+
   for( int y = 0; y < IMHT; y++ ) {   //go through all lines
     for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
       c_in :> val;                    //read the pixel value
@@ -296,57 +291,6 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
       //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
   }
-
-  //FIRST SEQUENTIAL ATTEMPT
-
-//  for (int i = 0; i < 1; i++) {
-//      for( int y = 0; y < IMHT; y++ ) {
-//          //printf("\n");
-//          for( int x = 0; x < IMWD; x++ ) {
-//              newMap[y][x] = dead;
-//              int neighbours = getNeighbours(map, y, x);
-//              int isAlive = map[y][x] == alive;
-//              if (neighbours < 2 && isAlive) newMap[y][x] = dead;
-//              else if (isAlive && (neighbours == 2 || neighbours == 3)) newMap[y][x] = alive;
-//              else if(neighbours > 3 && isAlive) newMap[y][x] = dead;
-//              else if(neighbours == 3 && !isAlive) newMap[y][x] = alive;
-//              //printf("-%4.1d", newMap[y][x]);
-//          }
-//      }
-//      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
-//      //printf( "\nOne round completed...\n" );
-//  }
-  int inc = IMHT/4;
-  int leftover = IMHT % inc;
-
-  //PARALLEL ATTEMPT
-
-//  for (int gen = 0; gen < 1; gen++){
-//      uchar newMap[IMHT][IMWD];
-//      par(int y=0; y < IMHT; y+= IMHT/4) {
-//          for(int i = y; i <y+inc; i++){
-//              printf("y= %d, i= %d\n",y,i);
-//              memcpy(newMap[i],worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
-//          }
-//
-//      }
-//      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
-//  }
-
-
-
-  //PARALLEL APROACH BUT IN SEQUENTIAL FOR DEBUG
-  /*for (int gen = 0; gen < 1; gen++){
-        uchar newMap[IMHT][IMWD];
-        for(int y=0; y < IMHT; y+= IMHT/4) {
-            for(int i = y; i <y+inc; i++){
-                printf("y= %d, i= %d\n",y,i);
-                //memcpy(newMap,worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
-            }
-
-        }
-        memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
-    }*/
 
   /*
    * INITIAL STEP
@@ -389,9 +333,9 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
-  printf("outside\n");
 
   // copy back map
+  // TODO
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD; x++ ) {
           c_out <: map[y][x];
