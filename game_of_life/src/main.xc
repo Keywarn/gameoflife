@@ -101,8 +101,6 @@ int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
     return sum;
 }
 
-
-
 int getNeighbourRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int dir, int val) {
     if (dirMod[dir][0] == 1) {
         return above[mod(val, dirMod[dir][1], IMWD)];
@@ -122,6 +120,26 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
         }
 }
 
+// where y is relative to PART_SIZE
+int getNeighbourSplit(uchar row[PART_SIZE][IMWD], uchar above[], uchar below[], int dir, int x, int y) {
+    if (y == 0 && dirMod[dir][0] == 1) {
+        return above[mod(x, dirMod[dir][1], IMWD)];
+    }
+    else if (y == IMHT - 1 && dirMod[dir][0] == -1) {
+        return below[mod(x, dirMod[dir][1], IMWD)];
+    }
+    else {
+        return row[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)];
+    }
+}
+
+int getNeighboursSplit(uchar row[PART_SIZE][IMWD], uchar above[], uchar below[], int x, int y) {
+    int sum = 0;
+    for (int dir=0; dir < 8; dir++)
+        sum += getNeighbourSplit(row, above, below, dir, x, y);
+    return sum;
+}
+
 unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMWD], unsigned char row[IMWD]){
     uchar newRow[IMWD];
     for (int val = 0; val < IMWD; val++){
@@ -135,7 +153,7 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar rowBottom[]) {
+void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[], uchar below[]) {
     /*
      * SETUP
      */
@@ -161,9 +179,9 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop
     // receive rowTop & rowBototm
     slave {
         for (int x=0; x < IMWD; x++)
-            dist :> rowBottom[x];
+            dist :> below[x];
         for (int x=0; x < IMWD; x++)
-            dist :> rowTop[x];
+            dist :> above[x];
     }
 }
 

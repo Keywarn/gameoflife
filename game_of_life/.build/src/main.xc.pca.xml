@@ -13,8 +13,10 @@
 <fDef name="farmerNew" global="true" noreturn="false" doNotSpecialize="false" numParams="1"/>
 <fDef name="getNeighbour" global="true" noreturn="false" doNotSpecialize="false" numParams="4"/>
 <fDef name="getNeighbourRow" global="true" noreturn="false" doNotSpecialize="false" numParams="5"/>
+<fDef name="getNeighbourSplit" global="true" noreturn="false" doNotSpecialize="false" numParams="6"/>
 <fDef name="getNeighbours" global="true" noreturn="false" doNotSpecialize="false" numParams="3"/>
 <fDef name="getNeighboursRow" global="true" noreturn="false" doNotSpecialize="false" numParams="4"/>
+<fDef name="getNeighboursSplit" global="true" noreturn="false" doNotSpecialize="false" numParams="5"/>
 <fDef name="get_read_data" global="true" interface="i2c_master_async_if" noreturn="false" doNotSpecialize="false" numParams="2"/>
 <fDef name="get_write_result" global="true" interface="i2c_master_async_if" noreturn="false" doNotSpecialize="false" numParams="1"/>
 <fDef name="main" global="true" noreturn="false" doNotSpecialize="false" numParams="0"/>
@@ -753,6 +755,89 @@
   </arg>
   <arg num="4">
     <passThroughArg param="3" caller="getNeighboursRow" global="true"/>
+    <values>
+    </values>
+  </arg>
+</fCall>
+<fCall name="mod" global="true" numArgs="3">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="true" val="16"/></value>
+    </values>
+  </arg>
+</fCall>
+<fCall name="mod" global="true" numArgs="3">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="true" val="16"/></value>
+    </values>
+  </arg>
+</fCall>
+<fCall name="mod" global="true" numArgs="3">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="true" val="16"/></value>
+    </values>
+  </arg>
+</fCall>
+<fCall name="getNeighbourSplit" global="true" numArgs="6">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="3">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="4">
+    <passThroughArg param="3" caller="getNeighboursSplit" global="true"/>
+    <values>
+    </values>
+  </arg>
+  <arg num="5">
+    <passThroughArg param="4" caller="getNeighboursSplit" global="true"/>
     <values>
     </values>
   </arg>
