@@ -132,6 +132,24 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
         else if(neighbours == 3 && !isAlive) newRow[val] = alive;
     }
 }
+
+void workerNew (chanend dist) {
+    int serving = 1;
+    int data = 0;
+
+    while (serving) {
+        dist :> data;
+        printf("%d\n", data);
+        serving = 0;
+    }
+}
+
+void farmerNew (chanend dist[]) {
+    for (int i=0; i < 4; i++) {
+        dist[i] <: 3;
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Start your implementation by changing this function to implement the game of life
@@ -203,9 +221,10 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 //      memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
 //  }
 
-  //PARALLEL APROACH BUT IN SEQUENTIAL FOR DEBUG
 
-  for (int gen = 0; gen < 1; gen++){
+
+  //PARALLEL APROACH BUT IN SEQUENTIAL FOR DEBUG
+  /*for (int gen = 0; gen < 1; gen++){
         uchar newMap[IMHT][IMWD];
         for(int y=0; y < IMHT; y+= IMHT/4) {
             for(int i = y; i <y+inc; i++){
@@ -215,8 +234,20 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 
         }
         memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
-    }
+    }*/
 
+  chan dist[4];
+
+  par {
+    farmerNew(dist);
+    par (int f=0; f < 4; f++) {
+        workerNew(dist[f]);
+    }
+  }
+
+  printf("outside\n");
+
+  // copy back map
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD; x++ ) {
           c_out <: map[y][x];

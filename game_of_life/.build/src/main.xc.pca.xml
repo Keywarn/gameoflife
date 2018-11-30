@@ -10,6 +10,7 @@
 <fDef name="delay_milliseconds" global="true" noreturn="false" doNotSpecialize="true" numParams="1"/>
 <fDef name="delay_seconds" global="true" noreturn="false" doNotSpecialize="true" numParams="1"/>
 <fDef name="distributor" global="true" noreturn="false" doNotSpecialize="false" numParams="3"/>
+<fDef name="farmerNew" global="true" noreturn="false" doNotSpecialize="false" numParams="1"/>
 <fDef name="getNeighbour" global="true" noreturn="false" doNotSpecialize="false" numParams="4"/>
 <fDef name="getNeighbourRow" global="true" noreturn="false" doNotSpecialize="false" numParams="5"/>
 <fDef name="getNeighbours" global="true" noreturn="false" doNotSpecialize="false" numParams="3"/>
@@ -40,6 +41,7 @@
 <fDef name="start_write_request" global="true" interface="i2c_slave_callback_if" noreturn="false" doNotSpecialize="false" numParams="0"/>
 <fDef name="stop_bit" global="true" interface="i2c_slave_callback_if" noreturn="false" doNotSpecialize="false" numParams="0"/>
 <fDef name="worker" global="true" noreturn="false" doNotSpecialize="false" numParams="3"/>
+<fDef name="workerNew" global="true" noreturn="false" doNotSpecialize="false" numParams="1"/>
 <fDef name="write" global="true" interface="i2c_master_async_if" noreturn="false" doNotSpecialize="false" numParams="4"/>
 <fDef name="write" global="true" interface="i2c_master_if" noreturn="false" doNotSpecialize="false" numParams="5"/>
 <fDef name="write_reg" global="true" interface="i2c_master_if" noreturn="false" doNotSpecialize="true" numParams="4"/>
@@ -777,6 +779,18 @@
     </values>
   </arg>
 </fCall>
+<fCall name="printf" global="true" numArgs="2">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+</fCall>
 <fCall name="printf" global="true" numArgs="3">
   <arg num="0">
     <values>
@@ -808,37 +822,45 @@
     </values>
   </arg>
 </fCall>
-<fCall name="printf" global="true" numArgs="3">
+<fCall name="farmerNew" global="true" numArgs="1" impId="1">
   <arg num="0">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-  <arg num="1">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-  <arg num="2">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
 </fCall>
-<fCall name="__builtin_memcpy_xc" global="true" numArgs="3">
+<fCall name="workerNew" global="true" numArgs="1" impId="0">
   <arg num="0">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
-  <arg num="1">
+</fCall>
+<fCall name="workerNew" global="true" numArgs="1" impId="0">
+  <arg num="0">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
-  <arg num="2">
+</fCall>
+<fCall name="workerNew" global="true" numArgs="1" impId="0">
+  <arg num="0">
     <values>
-      <value type="intval"><intval isSigned="false" val="256"/></value>
+      <value type="unknown"/>
+    </values>
+  </arg>
+</fCall>
+<fCall name="workerNew" global="true" numArgs="1" impId="0">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+</fCall>
+<fCall name="printf" global="true" numArgs="1">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
     </values>
   </arg>
 </fCall>
@@ -1012,10 +1034,10 @@
 </fCall>
 <fCall name="modTest" global="true" numArgs="0">
 </fCall>
-<fCall name="i2c_master" global="true" numArgs="5" impId="0">
+<fCall name="i2c_master" global="true" numArgs="5" impId="2">
   <arg num="0">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="../src/main.xc" impId="0" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
     </values>
   </arg>
   <arg num="1">
@@ -1039,10 +1061,10 @@
     </values>
   </arg>
 </fCall>
-<fCall name="orientation" global="true" numArgs="2" impId="1">
+<fCall name="orientation" global="true" numArgs="2" impId="3">
   <arg num="0">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="../src/main.xc" impId="0" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
     </values>
   </arg>
   <arg num="1">
@@ -1051,19 +1073,7 @@
     </values>
   </arg>
 </fCall>
-<fCall name="DataInStream" global="true" numArgs="2" impId="2">
-  <arg num="0">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-  <arg num="1">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-</fCall>
-<fCall name="DataOutStream" global="true" numArgs="2" impId="3">
+<fCall name="DataInStream" global="true" numArgs="2" impId="4">
   <arg num="0">
     <values>
       <value type="unknown"/>
@@ -1075,7 +1085,19 @@
     </values>
   </arg>
 </fCall>
-<fCall name="distributor" global="true" numArgs="3" impId="4">
+<fCall name="DataOutStream" global="true" numArgs="2" impId="5">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+</fCall>
+<fCall name="distributor" global="true" numArgs="3" impId="6">
   <arg num="0">
     <values>
       <value type="unknown"/>
