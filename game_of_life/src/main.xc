@@ -171,7 +171,12 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop
     }
 
     // receive rowTop & rowBototm
-
+    slave {
+        for (int x=0; x < IMWD; x++)
+            dist :> rowBottom[x];
+        for (int x=0; x < IMWD; x++)
+            dist :> rowTop[x];
+    }
 }
 
 void farmerNew (chanend dist[], uchar map[]) {
@@ -223,7 +228,14 @@ void farmerNew (chanend dist[], uchar map[]) {
 
     // send rowTop & rowBottom
     for (int s=0; s < SPLIT; s++) {
-
+        master {
+            // btm
+            for (int x=0; x < IMWD; x++)
+                dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
+            // top
+            for (int x=0; x < IMWD; x++)
+                dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
+        }
     }
 }
 
@@ -243,7 +255,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   printf( "Waiting for Board Tilt...\n" );
   //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
 
-  unsigned int time;
+  unsigned time;
   timer t;
   t :> time;
 
@@ -343,7 +355,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
              &mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1],
              sizeof(mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1]));
       // top rows
-      memcpy(&rowBtms[s],
+      memcpy(&rowTops[s],
              &mapParts[mod(s, 1, SPLIT)][0],
              sizeof(mapParts[mod(s, 1, SPLIT)][0]));
   }
