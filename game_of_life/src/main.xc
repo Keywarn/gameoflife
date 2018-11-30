@@ -142,12 +142,29 @@ void workerNew (chanend dist) {
         printf("%d\n", data);
         serving = 0;
     }
+
+    // receive initial: row, rowTop, rowBottom
+
+    // LOOP
+    // process
+
+    // send row
+
+    // receive rowTop & rowBototm
+
 }
 
 void farmerNew (chanend dist[]) {
     for (int i=0; i < 4; i++) {
         dist[i] <: 3;
     }
+    // send initial: row, rowTop, rowBottom
+
+    // LOOP
+    // receive row
+
+    // send rowTop & rowBottom
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -236,6 +253,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
         memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
     }*/
 
+  // PROCESS
   chan dist[4];
 
   par {
