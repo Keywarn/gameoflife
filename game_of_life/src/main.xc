@@ -13,6 +13,7 @@
 #define  IMWD 16                  //image width
 #define SPLIT  4                  //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT)  //height of the part
+#define ITER  10                  //no. iterations
 
 typedef unsigned char uchar;
 
@@ -154,56 +155,59 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[], uchar below[]) {
+void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[IMWD], uchar below[IMWD]) {
     /*
      * SETUP
      */
 
-    // might need to memcpy some stuff here
-
-    uchar currentRow[PART_SIZE][IMWD];
+    // memcpy init. values into own
+    uchar currentRow[PART_SIZE][IMWD], currentAbove[IMWD], currentBelow[IMWD];
     memcpy(&currentRow, &row, sizeof(row));
+    memcpy(&currentAbove, &above, sizeof(above));
+    memcpy(&currentBelow, &below, sizeof(below));
 
     /*
      * LOOP
      */
     uchar newRow[PART_SIZE][IMWD];
 
-    // process
-    for (int y=0; y < PART_SIZE; y++) {
-        for (int x=0; x < IMWD; x++) {
-            newRow[y][x] = dead;
-            int neighbours = getNeighboursSplit(currentRow, above, below, x, y);
-            //printf("%d, ", neighbours);
-            int isAlive = currentRow[y][x] == alive;
-            if (neighbours < 2 && isAlive) newRow[y][x] = dead;
-            else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
-            else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
-            else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
-        }
-        printf("\n");
-    }
-
-    // copy newRow -> current
-    memcpy(&currentRow, &newRow, sizeof(newRow));
-
-    // send row
-    master {
-        dist <: part;
-
+    for (int i=0; i<ITER; i++) {
+        // process
         for (int y=0; y < PART_SIZE; y++) {
             for (int x=0; x < IMWD; x++) {
-                dist <: currentRow[y][x];
+                newRow[y][x] = dead;
+                int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y);
+                int isAlive = currentRow[y][x] == alive;
+
+                if (neighbours < 2 && isAlive) newRow[y][x] = dead;
+                else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
+                else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
+                else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
+            }
+            printf("\n");
+        }
+
+        // copy newRow -> current
+        memcpy(&currentRow, &newRow, sizeof(newRow));
+
+        // send row
+        master {
+            dist <: part;
+
+            for (int y=0; y < PART_SIZE; y++) {
+                for (int x=0; x < IMWD; x++) {
+                    dist <: currentRow[y][x];
+                }
             }
         }
-    }
 
-    // receive rowTop & rowBototm
-    slave {
-        for (int x=0; x < IMWD; x++)
-            dist :> below[x];
-        for (int x=0; x < IMWD; x++)
-            dist :> above[x];
+        // receive rowTop & rowBototm
+        slave {
+            for (int x=0; x < IMWD; x++)
+                dist :> currentAbove[x];
+            for (int x=0; x < IMWD; x++)
+                dist :> currentBelow[x];
+        }
     }
 }
 
@@ -213,40 +217,47 @@ void farmerNew (chanend dist[]) {
     uchar newMap[SPLIT][PART_SIZE][IMWD];
 
     // LOOP
-    // receive row
-    for (int i=0; i < SPLIT; i++) {
-        slave {
-            int part = 0;
-            dist[i] :> part;
+    for (int i=0; i<ITER; i++) {
+        // receive row
+        for (int i=0; i < SPLIT; i++) {
+            slave {
+                int part = 0;
+                dist[i] :> part;
 
+                for (int y=0; y < PART_SIZE; y++) {
+                    for (int x=0; x < IMWD; x++) {
+                        dist[i] :> newMap[part][y][x];
+                    }
+                }
+                printf("\npart: %d\n", part);
+            }
+        }
+
+        // TESTING: print arr
+        for (int s=0; s < SPLIT; s++) {
             for (int y=0; y < PART_SIZE; y++) {
                 for (int x=0; x < IMWD; x++) {
-                    dist[i] :> newMap[part][y][x];
+                    printf("%d, ", newMap[s][y][x]);
                 }
+                printf("\n");
             }
-            printf("\npart: %d\n", part);
         }
-    }
 
-    // TESTING: print arr
-    for (int s=0; s < SPLIT; s++) {
-        for (int y=0; y < PART_SIZE; y++) {
-            for (int x=0; x < IMWD; x++) {
-                printf("%d, ", newMap[s][y][x]);
+        printf("\n");
+        for (int i=0; i < IMWD; i++)
+            printf("%d, ", newMap[mod(2, -1, SPLIT)][PART_SIZE - 1][i]);
+        printf("\n");
+
+        // send rowTop & rowBottom
+        for (int s=0; s < SPLIT; s++) {
+            master {
+                // btm
+                for (int x=0; x < IMWD; x++)
+                    dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
+                // top
+                for (int x=0; x < IMWD; x++)
+                    dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
             }
-            printf("\n");
-        }
-    }
-
-    // send rowTop & rowBottom
-    for (int s=0; s < SPLIT; s++) {
-        master {
-            // btm
-            for (int x=0; x < IMWD; x++)
-                dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
-            // top
-            for (int x=0; x < IMWD; x++)
-                dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
         }
     }
 }

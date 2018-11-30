@@ -792,6 +792,7 @@
     <values>
       <value type="unknown"/>
       <value type="intval"><intval isSigned="true" val="0"/></value>
+      <value type="intval"><intval isSigned="true" val="2"/></value>
       <value type="intval"><intval isSigned="true" val="5"/></value>
       <value type="intval"><intval isSigned="true" val="10"/></value>
     </values>
