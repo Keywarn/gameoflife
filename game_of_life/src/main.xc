@@ -121,15 +121,16 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
 }
 
 // where y is relative to PART_SIZE
-int getNeighbourSplit(uchar row[PART_SIZE][IMWD], uchar above[], uchar below[], int dir, int x, int y) {
-    if (y == 0 && dirMod[dir][0] == 1) {
-        return above[mod(x, dirMod[dir][1], IMWD)];
+int getNeighbourSplit(uchar section[PART_SIZE][IMWD], uchar above[], uchar below[], int dir, int x, int y) {
+    if (y == 0 && dirMod[dir][0] == -1) {
+        return above[mod(x, dirMod[dir][1], IMWD)] / alive;
     }
-    else if (y == IMHT - 1 && dirMod[dir][0] == -1) {
-        return below[mod(x, dirMod[dir][1], IMWD)];
+    else if (y == PART_SIZE - 1 && dirMod[dir][0] == 1) {
+        return below[mod(x, dirMod[dir][1], IMWD)] / alive;
     }
     else {
-        return row[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)];
+        //printf("(%d, %d) -+> (,) -> (%d, %d)\n", x, y, mod(x, dirMod[dir][1], IMWD), y + dirMod[dir][0]);
+        return section[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)] / alive;
     }
 }
 
@@ -160,10 +161,31 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
 
     // might need to memcpy some stuff here
 
+    uchar currentRow[PART_SIZE][IMWD];
+    memcpy(&currentRow, &row, sizeof(row));
+
     /*
      * LOOP
      */
+    uchar newRow[PART_SIZE][IMWD];
+
     // process
+    for (int y=0; y < PART_SIZE; y++) {
+        for (int x=0; x < IMWD; x++) {
+            newRow[y][x] = dead;
+            int neighbours = getNeighboursSplit(currentRow, above, below, x, y);
+            //printf("%d, ", neighbours);
+            int isAlive = currentRow[y][x] == alive;
+            if (neighbours < 2 && isAlive) newRow[y][x] = dead;
+            else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
+            else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
+            else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
+        }
+        printf("\n");
+    }
+
+    // copy newRow -> current
+    memcpy(&currentRow, &newRow, sizeof(newRow));
 
     // send row
     master {
@@ -171,7 +193,7 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
 
         for (int y=0; y < PART_SIZE; y++) {
             for (int x=0; x < IMWD; x++) {
-                dist <: row[y][x];
+                dist <: currentRow[y][x];
             }
         }
     }
@@ -207,14 +229,14 @@ void farmerNew (chanend dist[]) {
     }
 
     // TESTING: print arr
-    /*for (int s=0; s < SPLIT; s++) {
+    for (int s=0; s < SPLIT; s++) {
         for (int y=0; y < PART_SIZE; y++) {
             for (int x=0; x < IMWD; x++) {
                 printf("%d, ", newMap[s][y][x]);
             }
             printf("\n");
         }
-    }*/
+    }
 
     // send rowTop & rowBottom
     for (int s=0; s < SPLIT; s++) {
