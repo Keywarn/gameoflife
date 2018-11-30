@@ -135,7 +135,7 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar rowBottom[]) {
+void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar rowBottom[]) {
     int serving = 1;
     int data = 0;
 
@@ -144,8 +144,7 @@ void workerNew (chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar 
         printf("%d\n", data);
         serving = 0;
     }*/
-
-    int wht[3];
+    /*int wht[3];
     slave {
         for (int i=0; i < 3; i++)
             dist :> wht[i];
@@ -153,12 +152,23 @@ void workerNew (chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar 
         for (int i=0; i < 3; i++)
             printf("%d, ", wht[i]);
         printf("\n");
-    }
+    }*/
 
-    // LOOP
+    /*
+     * LOOPs
+     */
     // process
 
     // send row
+    master {
+        dist <: part;
+
+        for (int y=0; y < PART_SIZE; y++) {
+            for (int x=0; x < IMWD; x++) {
+                dist <: row[y][x];
+            }
+        }
+    }
 
     // receive rowTop & rowBototm
 
@@ -173,21 +183,48 @@ void farmerNew (chanend dist[], uchar map[]) {
     printf("\n");
 
     //uchar map[3];
-    for (int i=0; i < 4; i++) {
+    /*for (int i=0; i < 4; i++) {
         //dist[i] <: 3;
         int someVal[3] = { 1, 2, 3 };
         master {
             for (int ii=0; ii < 3; ii++)
                 dist[i] <: someVal[ii];
         }
-    }
+    }*/
     // send initial: row, rowTop, rowBottom
+
+    uchar newMap[SPLIT][PART_SIZE][IMWD];
 
     // LOOP
     // receive row
+    for (int i=0; i < SPLIT; i++) {
+        slave {
+            int part = 0;
+            dist[i] :> part;
+
+            for (int y=0; y < PART_SIZE; y++) {
+                for (int x=0; x < IMWD; x++) {
+                    dist[i] :> newMap[part][y][x];
+                }
+            }
+            printf("\npart: %d\n", part);
+        }
+    }
+
+    // TESTING: print arr
+    /*for (int s=0; s < SPLIT; s++) {
+        for (int y=0; y < PART_SIZE; y++) {
+            for (int x=0; x < IMWD; x++) {
+                printf("%d, ", newMap[s][y][x]);
+            }
+            printf("\n");
+        }
+    }*/
 
     // send rowTop & rowBottom
+    for (int s=0; s < SPLIT; s++) {
 
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -317,7 +354,8 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   par {
     farmerNew(dist, someArr);
     par (int f=0; f < 4; f++) {
-        workerNew(dist[f],
+        workerNew(f,
+                dist[f],
                 mapParts[f],
                 rowBtms[f],
                 rowTops[f]);
