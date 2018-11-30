@@ -120,7 +120,7 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
         }
 }
 
-unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMWD], unsigned char row[IMWD]){
+void worker (chanend dist, unsigned char above[IMWD], unsigned char below[IMWD], unsigned char row[IMWD]){
     uchar newRow[IMWD];
     for (int val = 0; val < IMWD; val++){
         newRow[val] = dead;
@@ -130,8 +130,10 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
         else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[val] = alive;
         else if(neighbours > 3 && isAlive) newRow[val] = dead;
         else if(neighbours == 3 && !isAlive) newRow[val] = alive;
+        dist :> newRow[val];
     }
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Start your implementation by changing this function to implement the game of life
@@ -204,13 +206,14 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 //  }
 
   //PARALLEL APROACH BUT IN SEQUENTIAL FOR DEBUG
-
+  chanend worker;
   for (int gen = 0; gen < 1; gen++){
         uchar newMap[IMHT][IMWD];
         for(int y=0; y < IMHT; y+= IMHT/4) {
             for(int i = y; i <y+inc; i++){
                 printf("y= %d, i= %d\n",y,i);
-                memcpy(newMap,worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
+                worker()
+                //memcpy(newMap, worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
             }
 
         }
