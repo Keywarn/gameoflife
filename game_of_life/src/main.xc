@@ -137,13 +137,22 @@ void workerNew (chanend dist) {
     int serving = 1;
     int data = 0;
 
-    while (serving) {
+    /*while (serving) {
         dist :> data;
         printf("%d\n", data);
         serving = 0;
-    }
+    }*/
 
     // receive initial: row, rowTop, rowBottom
+    int someVal[3];
+    slave {
+        for (int i=0; i < 3; i++)
+            dist :> someVal[i];
+
+        for (int i=0; i < 3; i++)
+            printf("%d, ", someVal[i]);
+        printf("\n");
+    }
 
     // LOOP
     // process
@@ -156,7 +165,12 @@ void workerNew (chanend dist) {
 
 void farmerNew (chanend dist[]) {
     for (int i=0; i < 4; i++) {
-        dist[i] <: 3;
+        //dist[i] <: 3;
+        int someVal[3] = { 1, 2, 3 };
+        master {
+            for (int ii=0; ii < 3; ii++)
+                dist[i] <: someVal[ii];
+        }
     }
     // send initial: row, rowTop, rowBottom
 
