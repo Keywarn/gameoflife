@@ -210,7 +210,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
         for(int y=0; y < IMHT; y+= IMHT/4) {
             for(int i = y; i <y+inc; i++){
                 printf("y= %d, i= %d\n",y,i);
-                memcpy(newMap,worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
+                //memcpy(newMap,worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
             }
 
         }
