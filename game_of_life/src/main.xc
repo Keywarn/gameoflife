@@ -135,7 +135,7 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (chanend dist, uchar map[]) {
+void workerNew (chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar rowBottom[]) {
     int serving = 1;
     int data = 0;
 
@@ -145,10 +145,7 @@ void workerNew (chanend dist, uchar map[]) {
         serving = 0;
     }*/
 
-    // receive initial: row, rowTop, rowBottom
-    uchar row[IMWD], rowTop[IMWD], rowBottom[IMWD];
     int wht[3];
-
     slave {
         for (int i=0; i < 3; i++)
             dist :> wht[i];
@@ -292,36 +289,38 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
   /*
    * INITIAL STEP
    */
-  // SPLIT
+  // split map into parts
   uchar mapParts[SPLIT][PART_SIZE][IMWD];
-
-  //for (int i=0; i < IMWD; i++) {
-      //printf("%d, ", mapParts[0][i]);
-  //}
-  //printf("\n");
-
   for (int s=0; s < SPLIT; s++) {
       int yOffset = s * SPLIT;
       for (int y=0; y < PART_SIZE; y++) {
           int actualY = y + yOffset;
           memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
-
-          //mapParts[y][x] =
-          //printf("%d: (%d, %d)\n", s, x, y + yOffset);
       }
   }
-
-  for (int y=0; y < PART_SIZE; y++) {
-      for (int x=0; x < IMWD; x++) {
-          printf("%d, ", mapParts[1][y][x]);
-      }
-      printf("\n");
+  // create arrays of separate bottom & top rows for each part
+  uchar rowBtms[SPLIT][IMWD], rowTops[SPLIT][IMWD];
+  for (int s=0; s < SPLIT; s++) {
+      // bottom rows
+      memcpy(&rowBtms[s],
+             &mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1],
+             sizeof(mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1]));
+      // top rows
+      memcpy(&rowBtms[s],
+             &mapParts[mod(s, 1, SPLIT)][0],
+             sizeof(mapParts[mod(s, 1, SPLIT)][0]));
   }
 
+  /*
+   * LOOP
+   */
   par {
     farmerNew(dist, someArr);
     par (int f=0; f < 4; f++) {
-        workerNew(dist[f], arrs[f]);
+        workerNew(dist[f],
+                mapParts[f],
+                rowBtms[f],
+                rowTops[f]);
     }
   }
 

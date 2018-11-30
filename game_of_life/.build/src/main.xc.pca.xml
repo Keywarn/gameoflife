@@ -41,7 +41,7 @@
 <fDef name="start_write_request" global="true" interface="i2c_slave_callback_if" noreturn="false" doNotSpecialize="false" numParams="0"/>
 <fDef name="stop_bit" global="true" interface="i2c_slave_callback_if" noreturn="false" doNotSpecialize="false" numParams="0"/>
 <fDef name="worker" global="true" noreturn="false" doNotSpecialize="false" numParams="3"/>
-<fDef name="workerNew" global="true" noreturn="false" doNotSpecialize="false" numParams="2"/>
+<fDef name="workerNew" global="true" noreturn="false" doNotSpecialize="false" numParams="4"/>
 <fDef name="write" global="true" interface="i2c_master_async_if" noreturn="false" doNotSpecialize="false" numParams="4"/>
 <fDef name="write" global="true" interface="i2c_master_if" noreturn="false" doNotSpecialize="false" numParams="5"/>
 <fDef name="write_reg" global="true" interface="i2c_master_if" noreturn="false" doNotSpecialize="true" numParams="4"/>
@@ -817,6 +817,25 @@
     </values>
   </arg>
 </fCall>
+<fCall name="printf" global="true" numArgs="2">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+</fCall>
+<fCall name="printf" global="true" numArgs="1">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+</fCall>
 <fCall name="printf" global="true" numArgs="3">
   <arg num="0">
     <values>
@@ -865,7 +884,7 @@
     </values>
   </arg>
 </fCall>
-<fCall name="printf" global="true" numArgs="2">
+<fCall name="__builtin_memcpy_xc" global="true" numArgs="3">
   <arg num="0">
     <values>
       <value type="unknown"/>
@@ -876,11 +895,60 @@
       <value type="unknown"/>
     </values>
   </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="false" val="16"/></value>
+    </values>
+  </arg>
 </fCall>
-<fCall name="printf" global="true" numArgs="1">
+<fCall name="mod" global="true" numArgs="3">
   <arg num="0">
     <values>
       <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="intval"><intval isSigned="true" val="-1"/></value>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="true" val="4"/></value>
+    </values>
+  </arg>
+</fCall>
+<fCall name="__builtin_memcpy_xc" global="true" numArgs="3">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="false" val="16"/></value>
+    </values>
+  </arg>
+</fCall>
+<fCall name="mod" global="true" numArgs="3">
+  <arg num="0">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1">
+    <values>
+      <value type="intval"><intval isSigned="true" val="1"/></value>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="intval"><intval isSigned="true" val="4"/></value>
     </values>
   </arg>
 </fCall>
@@ -896,49 +964,89 @@
     </values>
   </arg>
 </fCall>
-<fCall name="workerNew" global="true" numArgs="2" impId="0">
+<fCall name="workerNew" global="true" numArgs="4" impId="0">
   <arg num="0">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
   <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="3">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
 </fCall>
-<fCall name="workerNew" global="true" numArgs="2" impId="0">
+<fCall name="workerNew" global="true" numArgs="4" impId="0">
   <arg num="0">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
   <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="3">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
 </fCall>
-<fCall name="workerNew" global="true" numArgs="2" impId="0">
+<fCall name="workerNew" global="true" numArgs="4" impId="0">
   <arg num="0">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
   <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="3">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
 </fCall>
-<fCall name="workerNew" global="true" numArgs="2" impId="0">
+<fCall name="workerNew" global="true" numArgs="4" impId="0">
   <arg num="0">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
   <arg num="1">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="3">
     <values>
       <value type="unknown"/>
     </values>
