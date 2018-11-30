@@ -136,26 +136,14 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
 }
 
 void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop[], uchar rowBottom[]) {
-    int serving = 1;
-    int data = 0;
+    /*
+     * SETUP
+     */
 
-    /*while (serving) {
-        dist :> data;
-        printf("%d\n", data);
-        serving = 0;
-    }*/
-    /*int wht[3];
-    slave {
-        for (int i=0; i < 3; i++)
-            dist :> wht[i];
-
-        for (int i=0; i < 3; i++)
-            printf("%d, ", wht[i]);
-        printf("\n");
-    }*/
+    // might need to memcpy some stuff here
 
     /*
-     * LOOPs
+     * LOOP
      */
     // process
 
@@ -179,25 +167,9 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar rowTop
     }
 }
 
-void farmerNew (chanend dist[], uchar map[]) {
+void farmerNew (chanend dist[]) {
     // SETUP
     // receive map
-    for (int i=0; i < 3; i++) {
-        printf("%d, ", map[i]);
-    }
-    printf("\n");
-
-    //uchar map[3];
-    /*for (int i=0; i < 4; i++) {
-        //dist[i] <: 3;
-        int someVal[3] = { 1, 2, 3 };
-        master {
-            for (int ii=0; ii < 3; ii++)
-                dist[i] <: someVal[ii];
-        }
-    }*/
-    // send initial: row, rowTop, rowBottom
-
     uchar newMap[SPLIT][PART_SIZE][IMWD];
 
     // LOOP
@@ -325,19 +297,11 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
         memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
     }*/
 
-  // PROCESS
-  chan dist[4];
-  uchar someArr[3] = {4, 5, 6};
-  uchar arrs[4][3] = {
-      {1, 2, 3},
-      {4, 5, 6},
-      {7, 8, 9},
-      {10, 11, 12}
-  };
-
   /*
    * INITIAL STEP
    */
+  chan dist[SPLIT];
+
   // split map into parts
   uchar mapParts[SPLIT][PART_SIZE][IMWD];
   for (int s=0; s < SPLIT; s++) {
@@ -364,7 +328,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
    * LOOP
    */
   par {
-    farmerNew(dist, someArr);
+    farmerNew(dist);
     par (int f=0; f < 4; f++) {
         workerNew(f,
                 dist[f],
