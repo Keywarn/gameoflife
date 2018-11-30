@@ -11,6 +11,8 @@
 
 #define  IMHT 16                  //image height
 #define  IMWD 16                  //image width
+#define SPLIT  4                  //how many parts to split the height into
+#define PART_SIZE (IMHT / SPLIT)  //height of the part
 
 typedef unsigned char uchar;
 
@@ -133,7 +135,7 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (chanend dist) {
+void workerNew (chanend dist, uchar map[]) {
     int serving = 1;
     int data = 0;
 
@@ -144,13 +146,15 @@ void workerNew (chanend dist) {
     }*/
 
     // receive initial: row, rowTop, rowBottom
-    int someVal[3];
+    uchar row[IMWD], rowTop[IMWD], rowBottom[IMWD];
+    int wht[3];
+
     slave {
         for (int i=0; i < 3; i++)
-            dist :> someVal[i];
+            dist :> wht[i];
 
         for (int i=0; i < 3; i++)
-            printf("%d, ", someVal[i]);
+            printf("%d, ", wht[i]);
         printf("\n");
     }
 
@@ -163,7 +167,15 @@ void workerNew (chanend dist) {
 
 }
 
-void farmerNew (chanend dist[]) {
+void farmerNew (chanend dist[], uchar map[]) {
+    // SETUP
+    // receive map
+    for (int i=0; i < 3; i++) {
+        printf("%d, ", map[i]);
+    }
+    printf("\n");
+
+    //uchar map[3];
     for (int i=0; i < 4; i++) {
         //dist[i] <: 3;
         int someVal[3] = { 1, 2, 3 };
@@ -269,11 +281,47 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 
   // PROCESS
   chan dist[4];
+  uchar someArr[3] = {4, 5, 6};
+  uchar arrs[4][3] = {
+      {1, 2, 3},
+      {4, 5, 6},
+      {7, 8, 9},
+      {10, 11, 12}
+  };
+
+  /*
+   * INITIAL STEP
+   */
+  // SPLIT
+  uchar mapParts[SPLIT][PART_SIZE][IMWD];
+
+  //for (int i=0; i < IMWD; i++) {
+      //printf("%d, ", mapParts[0][i]);
+  //}
+  //printf("\n");
+
+  for (int s=0; s < SPLIT; s++) {
+      int yOffset = s * SPLIT;
+      for (int y=0; y < PART_SIZE; y++) {
+          int actualY = y + yOffset;
+          memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
+
+          //mapParts[y][x] =
+          //printf("%d: (%d, %d)\n", s, x, y + yOffset);
+      }
+  }
+
+  for (int y=0; y < PART_SIZE; y++) {
+      for (int x=0; x < IMWD; x++) {
+          printf("%d, ", mapParts[1][y][x]);
+      }
+      printf("\n");
+  }
 
   par {
-    farmerNew(dist);
+    farmerNew(dist, someArr);
     par (int f=0; f < 4; f++) {
-        workerNew(dist[f]);
+        workerNew(dist[f], arrs[f]);
     }
   }
 
