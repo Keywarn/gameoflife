@@ -208,6 +208,7 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
                 dist :> currentBelow[x];
         }
     }
+    printf("\nWORKER: ended!");
 }
 
 void farmerNew (chanend dist[]) {
@@ -245,16 +246,19 @@ void farmerNew (chanend dist[]) {
         for (int s=0; s < SPLIT; s++) {
             master {
                 // btm
-                for (int x=0; x < IMWD; x++)
+                for (int x=0; x < IMWD; x++) {
                     dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
+                }
                 // top
-                for (int x=0; x < IMWD; x++)
+                for (int x=0; x < IMWD; x++) {
                     dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
+                }
             }
         }
     }
 
     // communicate farmer -> distributor method
+    printf("\nFARMER: ended!");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -333,6 +337,8 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
+  printf("\noutside!\n");
+
 
   // copy back map
   // TODO
@@ -341,7 +347,25 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
           c_out <: map[y][x];
       }
   }
+  /*uchar endMap[IMHT][IMWD];
+  slave {
+      for (int s=0; s < SPLIT; s++) {
+          for (int y=0; y < PART_SIZE; y++) {
+              int actualY = PART_SIZE * s + y;
 
+              for (int x=0; x < IMWD; x++) {
+                  dist[s] :> endMap[actualY][x];
+              }
+          }
+      }
+  }
+
+  for (int y=0; y < IMHT; y++) {
+      for (int x=0; x < IMWD; x++) {
+          printf("%d, ", endMap[y][x]);
+      }
+      printf("\n");
+  }*/
 
   unsigned int newTime;
   t :> newTime;
