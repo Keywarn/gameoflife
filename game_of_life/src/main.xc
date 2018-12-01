@@ -208,7 +208,7 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
                 dist :> currentBelow[x];
         }
     }
-    printf("\nWORKER: ended!");
+    //printf("\nWORKER: ended!");
 }
 
 void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
@@ -256,18 +256,7 @@ void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
             }
         }
     }
-
-    // communicate farmer -> distributor method
-    for (int s=0; s < SPLIT; s++) {
-        for (int y=0; y < PART_SIZE; y++) {
-            int actualY = PART_SIZE * s + y;
-
-            for (int x=0; x < IMWD; x++) {
-                endMap[actualY][x] = newMap[s][y][x];
-            }
-        }
-    }
-    printf("\nFARMER: ended!");
+    //printf("\nFARMER: ended!");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

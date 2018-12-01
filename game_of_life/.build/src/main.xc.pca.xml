@@ -959,13 +959,6 @@
     </values>
   </arg>
 </fCall>
-<fCall name="printf" global="true" numArgs="1">
-  <arg num="0">
-    <values>
-      <value type="unknown"/>
-    </values>
-  </arg>
-</fCall>
 <fCall name="mod" global="true" numArgs="3">
   <arg num="0">
     <values>
@@ -997,13 +990,6 @@
   <arg num="2">
     <values>
       <value type="intval"><intval isSigned="true" val="4"/></value>
-    </values>
-  </arg>
-</fCall>
-<fCall name="printf" global="true" numArgs="1">
-  <arg num="0">
-    <values>
-      <value type="unknown"/>
     </values>
   </arg>
 </fCall>
