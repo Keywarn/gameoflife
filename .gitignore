@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+.metadata/
+game_of_life/.build/
+game_of_life/decompressor*
+game_of_life/spanning*
+game_of_life/target*
