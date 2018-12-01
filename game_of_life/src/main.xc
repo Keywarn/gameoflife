@@ -211,7 +211,7 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
     printf("\nWORKER: ended!");
 }
 
-void farmerNew (chanend dist[]) {
+void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
     // SETUP
     // receive map
     uchar newMap[SPLIT][PART_SIZE][IMWD];
@@ -258,6 +258,15 @@ void farmerNew (chanend dist[]) {
     }
 
     // communicate farmer -> distributor method
+    for (int s=0; s < SPLIT; s++) {
+        for (int y=0; y < PART_SIZE; y++) {
+            int actualY = PART_SIZE * s + y;
+
+            for (int x=0; x < IMWD; x++) {
+                endMap[actualY][x] = newMap[s][y][x];
+            }
+        }
+    }
     printf("\nFARMER: ended!");
 }
 
@@ -272,14 +281,14 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 {
   uchar val;
 
+  // for timing
+  unsigned int _setup, _loop, _end,
+                setup,  loop,  end;
+
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
   printf( "Waiting for Board Tilt...\n" );
   //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
-
-  unsigned time;
-  timer t;
-  t :> time;
 
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
@@ -295,6 +304,10 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
       //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
   }
+
+  unsigned time;
+  timer t;
+  t :> time;
 
   /*
    * INITIAL STEP
@@ -323,11 +336,16 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
              sizeof(mapParts[mod(s, 1, SPLIT)][0]));
   }
 
+  t :> _setup;
+
   /*
    * LOOP
    */
+  // passed to farmer & copied to
+  uchar endMap[IMHT][IMWD];
+
   par {
-    farmerNew(dist);
+    farmerNew(dist, endMap);
     par (int f=0; f < 4; f++) {
         workerNew(f,
                 dist[f],
@@ -337,40 +355,35 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
-  printf("\noutside!\n");
+  t :> _loop;
 
-
-  // copy back map
-  // TODO
-  for( int y = 0; y < IMHT; y++ ) {
-      for( int x = 0; x < IMWD; x++ ) {
-          c_out <: map[y][x];
-      }
-  }
-  /*uchar endMap[IMHT][IMWD];
-  slave {
-      for (int s=0; s < SPLIT; s++) {
-          for (int y=0; y < PART_SIZE; y++) {
-              int actualY = PART_SIZE * s + y;
-
-              for (int x=0; x < IMWD; x++) {
-                  dist[s] :> endMap[actualY][x];
-              }
-          }
-      }
-  }
-
-  for (int y=0; y < IMHT; y++) {
+  // DEBUG PRINT STUFF
+  /*for (int y=0; y < IMHT; y++) {
       for (int x=0; x < IMWD; x++) {
-          printf("%d, ", endMap[y][x]);
+          printf("%d,\t", endMap[y][x]);
       }
       printf("\n");
   }*/
 
-  unsigned int newTime;
-  t :> newTime;
+  // copy back map
+  for( int y = 0; y < IMHT; y++ ) {
+      for( int x = 0; x < IMWD; x++ ) {
+          c_out <: endMap[y][x];
+      }
+  }
 
-  printf("Time was: %d\n", (newTime-time)/1000000);
+  t :> _end;
+
+  setup = _setup - time;
+  loop = _loop - _setup;
+  end = _end - _loop;
+
+  // TIME CHECK
+  printf("\n--------\nTIME:\n* Setup: %d\n* Loop: %d\n* End: %d\n* TOTAL: %d\n",
+        (setup)/1000000,
+        (loop)/1000000,
+        (end)/1000000,
+        (_end - time)/1000000);
 
   printf("\n Output complete \n");
 }
