@@ -1,17 +1,2 @@
 <preCompilationAnalysis file="../src/mod.c">
-  <fCall global="true" name="mod"/>
-  <fCall global="true" name="mod.nstackwords"/>
-  <fCall global="true" name="mod.maxcores"/>
-  <fCall global="true" name="mod.maxtimers"/>
-  <fCall global="true" name="mod.maxchanends"/>
-  <fCall global="true" name="modTest"/>
-  <fCall global="true" name="modTest.nstackwords"/>
-  <fCall global="true" name="__assert_func.nstackwords"/>
-  <fCall global="true" name="modTest.maxcores"/>
-  <fCall global="true" name="__assert_func.maxcores"/>
-  <fCall global="true" name="modTest.maxtimers"/>
-  <fCall global="true" name="__assert_func.maxtimers"/>
-  <fCall global="true" name="modTest.maxchanends"/>
-  <fCall global="true" name="__assert_func.maxchanends"/>
-  <fCall global="true" name="__assert_func"/>
 </preCompilationAnalysis>

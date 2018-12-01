@@ -9,8 +9,11 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define  IMHT 16                  //image height
-#define  IMWD 16                  //image width
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
+#define SPLIT  4                 //how many parts to split the height into
+#define PART_SIZE (IMHT / SPLIT) //height of the part
+#define ITER  1                  //no. iterations
 
 typedef unsigned char uchar;
 
@@ -99,8 +102,6 @@ int getNeighbours(uchar map[IMHT][IMWD], int y, int x) {
     return sum;
 }
 
-
-
 int getNeighbourRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int dir, int val) {
     if (dirMod[dir][0] == 1) {
         return above[mod(val, dirMod[dir][1], IMWD)];
@@ -120,7 +121,32 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
         }
 }
 
+<<<<<<< HEAD
 void worker (chanend dist, unsigned char above[IMWD], unsigned char below[IMWD], unsigned char row[IMWD]){
+=======
+// where y is relative to PART_SIZE
+int getNeighbourSplit(uchar section[PART_SIZE][IMWD], uchar above[], uchar below[], int dir, int x, int y) {
+    if (y == 0 && dirMod[dir][0] == -1) {
+        return above[mod(x, dirMod[dir][1], IMWD)] / alive;
+    }
+    else if (y == PART_SIZE - 1 && dirMod[dir][0] == 1) {
+        return below[mod(x, dirMod[dir][1], IMWD)] / alive;
+    }
+    else {
+        //printf("(%d, %d) -+> (,) -> (%d, %d)\n", x, y, mod(x, dirMod[dir][1], IMWD), y + dirMod[dir][0]);
+        return section[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)] / alive;
+    }
+}
+
+int getNeighboursSplit(uchar row[PART_SIZE][IMWD], uchar above[], uchar below[], int x, int y) {
+    int sum = 0;
+    for (int dir=0; dir < 8; dir++)
+        sum += getNeighbourSplit(row, above, below, dir, x, y);
+    return sum;
+}
+
+unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMWD], unsigned char row[IMWD]){
+>>>>>>> 212e4c8cd4d58f43d9a8dbd7e6a278e2c28fb9d6
     uchar newRow[IMWD];
     for (int val = 0; val < IMWD; val++){
         newRow[val] = dead;
@@ -134,6 +160,113 @@ void worker (chanend dist, unsigned char above[IMWD], unsigned char below[IMWD],
     }
 }
 
+<<<<<<< HEAD
+=======
+void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[IMWD], uchar below[IMWD]) {
+    /*
+     * SETUP
+     */
+
+    // memcpy init. values into own
+    uchar currentRow[PART_SIZE][IMWD], currentAbove[IMWD], currentBelow[IMWD];
+    memcpy(&currentRow, &row, sizeof(row));
+    memcpy(&currentAbove, &above, sizeof(above));
+    memcpy(&currentBelow, &below, sizeof(below));
+
+    /*
+     * LOOP
+     */
+    uchar newRow[PART_SIZE][IMWD];
+
+    for (int i=0; i<ITER; i++) {
+        // process
+        for (int y=0; y < PART_SIZE; y++) {
+            for (int x=0; x < IMWD; x++) {
+                newRow[y][x] = dead;
+                int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y);
+                int isAlive = currentRow[y][x] == alive;
+
+                if (neighbours < 2 && isAlive) newRow[y][x] = dead;
+                else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
+                else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
+                else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
+            }
+        }
+
+        // copy newRow -> current
+        memcpy(&currentRow, &newRow, sizeof(newRow));
+
+        // send row
+        master {
+            dist <: part;
+
+            for (int y=0; y < PART_SIZE; y++) {
+                for (int x=0; x < IMWD; x++) {
+                    dist <: currentRow[y][x];
+                }
+            }
+        }
+
+        // receive rowTop & rowBototm
+        slave {
+            for (int x=0; x < IMWD; x++)
+                dist :> currentAbove[x];
+            for (int x=0; x < IMWD; x++)
+                dist :> currentBelow[x];
+        }
+    }
+    //printf("\nWORKER: ended!");
+}
+
+void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
+    // SETUP
+    // receive map
+    uchar newMap[SPLIT][PART_SIZE][IMWD];
+
+    // LOOP
+    for (int i=0; i<ITER; i++) {
+        // receive row
+        for (int i=0; i < SPLIT; i++) {
+            slave {
+                int part = 0;
+                dist[i] :> part;
+
+                for (int y=0; y < PART_SIZE; y++) {
+                    for (int x=0; x < IMWD; x++) {
+                        dist[i] :> newMap[part][y][x];
+                    }
+                }
+            }
+        }
+
+        // TESTING: print arr
+        /*for (int s=0; s < SPLIT; s++) {
+            for (int y=0; y < PART_SIZE; y++) {
+                for (int x=0; x < IMWD; x++) {
+                    printf("%d, ", newMap[s][y][x]);
+                }
+                printf("\n");
+            }
+        }*/
+
+        // send rowTop & rowBottom
+        for (int s=0; s < SPLIT; s++) {
+            master {
+                // btm
+                for (int x=0; x < IMWD; x++) {
+                    dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
+                }
+                // top
+                for (int x=0; x < IMWD; x++) {
+                    dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
+                }
+            }
+        }
+    }
+    //printf("\nFARMER: ended!");
+}
+
+>>>>>>> 212e4c8cd4d58f43d9a8dbd7e6a278e2c28fb9d6
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Start your implementation by changing this function to implement the game of life
@@ -145,21 +278,21 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 {
   uchar val;
 
+  // for timing
+  unsigned int _setup, _loop, _end,
+                setup,  loop,  end;
+
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
   printf( "Waiting for Board Tilt...\n" );
   //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
-
-  unsigned int time;
-  timer t;
-  t :> time;
 
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
   //change the image according to the "Game of Life"
   printf( "Processing...\n" );
   uchar map[IMHT][IMWD];
-  //uchar newMap[IMHT][IMWD];
+
   for( int y = 0; y < IMHT; y++ ) {   //go through all lines
     for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
       c_in :> val;                    //read the pixel value
@@ -169,6 +302,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
+<<<<<<< HEAD
   //FIRST SEQUENTIAL ATTEMPT
 
 //  for (int i = 0; i < 1; i++) {
@@ -215,22 +349,87 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
                 worker()
                 //memcpy(newMap, worker(map[mod(i,-1,IMHT)],map[mod(i,1,IMHT)],map[i]), sizeof(uchar)*IMWD);
             }
+=======
+  unsigned time;
+  timer t;
+  t :> time;
+>>>>>>> 212e4c8cd4d58f43d9a8dbd7e6a278e2c28fb9d6
 
-        }
-        memcpy(map, newMap, sizeof(unsigned char)*IMHT*IMWD);
+  /*
+   * INITIAL STEP
+   */
+  chan dist[SPLIT];
+
+  // split map into parts
+  uchar mapParts[SPLIT][PART_SIZE][IMWD];
+  for (int s=0; s < SPLIT; s++) {
+      int yOffset = s * SPLIT;
+      for (int y=0; y < PART_SIZE; y++) {
+          int actualY = y + yOffset;
+          memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
+      }
+  }
+  // create arrays of separate bottom & top rows for each part
+  uchar rowBtms[SPLIT][IMWD], rowTops[SPLIT][IMWD];
+  for (int s=0; s < SPLIT; s++) {
+      // bottom rows
+      memcpy(&rowBtms[s],
+             &mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1],
+             sizeof(mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1]));
+      // top rows
+      memcpy(&rowTops[s],
+             &mapParts[mod(s, 1, SPLIT)][0],
+             sizeof(mapParts[mod(s, 1, SPLIT)][0]));
+  }
+
+  t :> _setup;
+
+  /*
+   * LOOP
+   */
+  // passed to farmer & copied to
+  uchar endMap[IMHT][IMWD];
+
+  par {
+    farmerNew(dist, endMap);
+    par (int f=0; f < 4; f++) {
+        workerNew(f,
+                dist[f],
+                mapParts[f],
+                rowBtms[f],
+                rowTops[f]);
     }
+  }
 
+  t :> _loop;
+
+  // DEBUG PRINT STUFF
+  /*for (int y=0; y < IMHT; y++) {
+      for (int x=0; x < IMWD; x++) {
+          printf("%d,\t", endMap[y][x]);
+      }
+      printf("\n");
+  }*/
+
+  // copy back map
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD; x++ ) {
-          c_out <: map[y][x];
+          c_out <: endMap[y][x];
       }
   }
 
+  t :> _end;
 
-  unsigned int newTime;
-  t :> newTime;
+  setup = _setup - time;
+  loop = _loop - _setup;
+  end = _end - _loop;
 
-  printf("Time was: %d\n", (newTime-time)/1000000);
+  // TIME CHECK
+  printf("\n--------\nTIME:\n* Setup: %d\n* Loop: %d\n* End: %d\n* TOTAL: %d\n",
+        (setup)/1000000,
+        (loop)/1000000,
+        (end)/1000000,
+        (_end - time)/1000000);
 
   printf("\n Output complete \n");
 }

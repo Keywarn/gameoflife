@@ -1,4 +1,4 @@
-#include "assert.h"
+/*#include "assert.h"
 #include "mod.h"
 
 uchar mod(uchar val, int dval, int divisor) {
@@ -14,3 +14,4 @@ void modTest(){
     assert (mod(0,-1,10) == 9);
 
 }
+*/

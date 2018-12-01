@@ -3,6 +3,9 @@
 	<name>Game-of-Life</name>
 	<comment></comment>
 	<projects>
+		<project>lib_i2c</project>
+		<project>lib_logging</project>
+		<project>lib_xassert</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
