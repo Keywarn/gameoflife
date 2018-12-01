@@ -9,11 +9,11 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define  IMHT 16                  //image height
-#define  IMWD 16                  //image width
-#define SPLIT  4                  //how many parts to split the height into
-#define PART_SIZE (IMHT / SPLIT)  //height of the part
-#define ITER  10                  //no. iterations
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
+#define SPLIT  4                 //how many parts to split the height into
+#define PART_SIZE (IMHT / SPLIT) //height of the part
+#define ITER  100000              //no. iterations
 
 typedef unsigned char uchar;
 
