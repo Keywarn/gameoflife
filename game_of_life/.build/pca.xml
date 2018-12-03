@@ -620,7 +620,7 @@
   <arg num="0" specialize="false">
     <values>
       <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="1" param="0"/></value>
     </values>
   </arg>
   <arg num="1" specialize="true">
@@ -813,7 +813,7 @@
       <value type="intval"><intval isSigned="true" val="4"/></value>
       <value type="intval"><intval isSigned="true" val="10"/></value>
       <value type="intval"><intval isSigned="true" val="11"/></value>
-      <value type="intval"><intval isSigned="true" val="64"/></value>
+      <value type="intval"><intval isSigned="true" val="16"/></value>
     </values>
   </arg>
 </fInfo>
@@ -824,7 +824,7 @@
 <fInfo name="orientation" global="true" specialize="true" noreturn="true" doNotSpecialize="false" numParams="2">
   <arg num="0" specialize="true">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="1" param="0"/></value>
     </values>
   </arg>
   <arg num="1" specialize="false">
@@ -834,7 +834,7 @@
   </arg>
  <specializations>
    <specialization id="0">
-    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value></values></arg>
+    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="1" param="0"/></value></values></arg>
     <arg num="1"><values><value type="unknown"/></values></arg>
    </specialization>
  </specializations>
@@ -881,7 +881,7 @@
 <fInfo name="read_acceleration" global="true" specialize="true" noreturn="false" doNotSpecialize="false" numParams="2">
   <arg num="0" specialize="true">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="1" param="0"/></value>
     </values>
   </arg>
   <arg num="1" specialize="true">
@@ -891,7 +891,7 @@
   </arg>
  <specializations>
    <specialization id="0">
-    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value></values></arg>
+    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="1" param="0"/></value></values></arg>
     <arg num="1"><values><value type="intval"><intval isSigned="true" val="1"/></value></values></arg>
    </specialization>
  </specializations>
@@ -1165,8 +1165,8 @@
 </fCall>
 <fCall name="i2c_master_async_aux" global="true" callerUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" numArgs="4" impId="1" specializationId="0">
 </fCall>
-<fCall name="i2c_master" global="true" callerUnit="../src/main.xc" numArgs="5" impId="2" specializationId="0">
+<fCall name="i2c_master" global="true" callerUnit="../src/main.xc" numArgs="5" impId="1" specializationId="0">
 </fCall>
-<fCall name="orientation" global="true" callerUnit="../src/main.xc" numArgs="2" impId="3" specializationId="0">
+<fCall name="orientation" global="true" callerUnit="../src/main.xc" numArgs="2" impId="2" specializationId="0">
 </fCall>
 </preCompilationAnalysis>

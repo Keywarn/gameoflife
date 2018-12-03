@@ -9,8 +9,8 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 64                  //image height
-#define IMWD 64                  //image width
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
 #define ITER  1                  //no. iterations
@@ -278,113 +278,12 @@ void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 {
-  uchar val;
-
-  // for timing
-  unsigned int _setup, _loop, _end,
-                setup,  loop,  end;
-
-  //Starting up and wait for tilting of the xCore-200 Explorer
-  printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
-  printf( "Waiting for Board Tilt...\n" );
-  //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
-
-  //Read in and do something with your image values..
-  //This just inverts every pixel, but you should
-  //change the image according to the "Game of Life"
-  printf( "Processing...\n" );
-  uchar map[IMHT][IMWD];
-
-  for( int y = 0; y < IMHT; y++ ) {   //go through all lines
-    for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
-      c_in :> val;                    //read the pixel value
-
-      map[y][x] = val;
-      //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
-    }
-  }
-
-  unsigned time;
-  timer t;
-  t :> time;
-
-  /*
-   * INITIAL STEP
-   */
-  chan dist[SPLIT];
-
-  // split map into parts
-  uchar mapParts[SPLIT][PART_SIZE][IMWD];
-  for (int s=0; s < SPLIT; s++) {
-      int yOffset = s * SPLIT;
-      for (int y=0; y < PART_SIZE; y++) {
-          int actualY = y + yOffset;
-          memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
-      }
-  }
-  // create arrays of separate bottom & top rows for each part
-  uchar rowBtms[SPLIT][IMWD], rowTops[SPLIT][IMWD];
-  for (int s=0; s < SPLIT; s++) {
-      // bottom rows
-      memcpy(&rowBtms[s],
-             &mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1],
-             sizeof(mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1]));
-      // top rows
-      memcpy(&rowTops[s],
-             &mapParts[mod(s, 1, SPLIT)][0],
-             sizeof(mapParts[mod(s, 1, SPLIT)][0]));
-  }
-
-  t :> _setup;
-
-  /*
-   * LOOP
-   */
-  // passed to farmer & copied to
-  uchar endMap[IMHT][IMWD];
 
   par {
-    farmerNew(dist, endMap);
-    par (int f=0; f < 4; f++) {
-        workerNew(f,
-                dist[f],
-                mapParts[f],
-                rowBtms[f],
-                rowTops[f]);
-    }
+
   }
 
-  t :> _loop;
 
-  // DEBUG PRINT STUFF
-  /*for (int y=0; y < IMHT; y++) {
-      for (int x=0; x < IMWD; x++) {
-          printf("%d,\t", endMap[y][x]);
-      }
-      printf("\n");
-  }*/
-
-  // copy back map
-  for( int y = 0; y < IMHT; y++ ) {
-      for( int x = 0; x < IMWD; x++ ) {
-          c_out <: endMap[y][x];
-      }
-  }
-
-  t :> _end;
-
-  setup = _setup - time;
-  loop = _loop - _setup;
-  end = _end - _loop;
-
-  // TIME CHECK
-  printf("\n--------\nTIME:\n* Setup: %d\n* Loop: %d\n* End: %d\n* TOTAL: %d\n",
-        (setup)/1000000,
-        (loop)/1000000,
-        (end)/1000000,
-        (_end - time)/1000000);
-
-  printf("\n Output complete \n");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -474,9 +373,77 @@ int main(void) {
 
     i2c_master_if i2c[1];               //interface to orientation
 
-    char infname[] = "64x64.pgm";     //put your input image path here
+    char infname[] = "test.pgm";     //put your input image path here
     char outfname[] = "testout.pgm"; //put your output image path here
     chan c_inIO, c_outIO, c_control;    //extend your channel definitions here
+
+    //DUMP from distributor
+
+    uchar val;
+
+      // for timing
+      unsigned int _setup, _loop, _end,
+                    setup,  loop,  end;
+
+      //Starting up and wait for tilting of the xCore-200 Explorer
+      printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
+      printf( "Waiting for Board Tilt...\n" );
+      //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
+
+      //Read in and do something with your image values..
+      //This just inverts every pixel, but you should
+      //change the image according to the "Game of Life"
+      printf( "Processing...\n" );
+      uchar map[IMHT][IMWD];
+
+      for( int y = 0; y < IMHT; y++ ) {   //go through all lines
+        for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
+          c_inIO :> val;                    //read the pixel value
+
+          map[y][x] = val;
+          //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
+        }
+      }
+
+      unsigned time;
+      timer t;
+      t :> time;
+
+      /*
+       * INITIAL STEP
+       */
+      chan dist[SPLIT];
+
+      // split map into parts
+      uchar mapParts[SPLIT][PART_SIZE][IMWD];
+      for (int s=0; s < SPLIT; s++) {
+          int yOffset = s * SPLIT;
+          for (int y=0; y < PART_SIZE; y++) {
+              int actualY = y + yOffset;
+              memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
+          }
+      }
+      // create arrays of separate bottom & top rows for each part
+      uchar rowBtms[SPLIT][IMWD], rowTops[SPLIT][IMWD];
+      for (int s=0; s < SPLIT; s++) {
+          // bottom rows
+          memcpy(&rowBtms[s],
+                 &mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1],
+                 sizeof(mapParts[mod(s, -1, SPLIT)][PART_SIZE - 1]));
+          // top rows
+          memcpy(&rowTops[s],
+                 &mapParts[mod(s, 1, SPLIT)][0],
+                 sizeof(mapParts[mod(s, 1, SPLIT)][0]));
+      }
+
+      t :> _setup;
+
+      /*
+       * LOOP
+       */
+      // passed to farmer & copied to
+      uchar endMap[IMHT][IMWD];
+
 
     par {
         i2c_master(i2c, 1, p_scl, p_sda, 10);   //server thread providing orientation data
@@ -484,7 +451,50 @@ int main(void) {
         DataInStream(infname, c_inIO);          //thread to read in a PGM image
         DataOutStream(outfname, c_outIO);       //thread to write out a PGM image
         distributor(c_inIO, c_outIO, c_control);//thread to coordinate work on image
+
+        //Create the farmer and the workers
+        farmerNew(dist, endMap);
+        par (int f=0; f < 4; f++) {
+                on tile[1]: workerNew(f,
+                        dist[f],
+                        mapParts[f],
+                        rowBtms[f],
+                        rowTops[f]);
+            }
       }
+    //MORE DUMP
+
+    t :> _loop;
+
+      // DEBUG PRINT STUFF
+      /*for (int y=0; y < IMHT; y++) {
+          for (int x=0; x < IMWD; x++) {
+              printf("%d,\t", endMap[y][x]);
+          }
+          printf("\n");
+      }*/
+
+      // copy back map
+      for( int y = 0; y < IMHT; y++ ) {
+          for( int x = 0; x < IMWD; x++ ) {
+              c_outIO <: endMap[y][x];
+          }
+      }
+
+      t :> _end;
+
+      setup = _setup - time;
+      loop = _loop - _setup;
+      end = _end - _loop;
+
+      // TIME CHECK
+      printf("\n--------\nTIME:\n* Setup: %d\n* Loop: %d\n* End: %d\n* TOTAL: %d\n",
+            (setup)/1000000,
+            (loop)/1000000,
+            (end)/1000000,
+            (_end - time)/1000000);
+
+      printf("\n Output complete \n");
 
       return 0;
 }
