@@ -56,3 +56,6 @@ game_of_life/.build/
 game_of_life/decompressor*
 game_of_life/spanning*
 game_of_life/target*
+game_of_life/.build*
+game_of_life/.settings*
+game_of_life/bin*
