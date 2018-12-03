@@ -2,7 +2,6 @@
 <fInfo name="high_pulse" global="false" unit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master.xc" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
@@ -19,7 +18,6 @@
 <fInfo name="high_pulse_sample" global="false" unit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master.xc" specialize="false" noreturn="false" doNotSpecialize="false" numParams="4">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
@@ -42,7 +40,6 @@
 <fInfo name="release_clock_and_wait" global="false" unit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master.xc" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
@@ -59,12 +56,10 @@
 <fInfo name="start_bit" global="false" unit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master.xc" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="2" specialize="false">
@@ -76,12 +71,10 @@
 <fInfo name="stop_bit" global="false" unit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master.xc" specialize="false" noreturn="false" doNotSpecialize="false" numParams="4">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="2" specialize="false">
@@ -98,12 +91,10 @@
 <fInfo name="tx8" global="false" unit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master.xc" specialize="false" noreturn="false" doNotSpecialize="false" numParams="5">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="2" specialize="false">
@@ -344,24 +335,20 @@
 <fInfo name="DataInStream" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
 </fInfo>
 <fInfo name="DataOutStream" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
   <arg num="0" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
 </fInfo>
@@ -432,6 +419,20 @@
 <fInfo name="distributor" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
+    </values>
+  </arg>
+  <arg num="1" specialize="false">
+    <values>
+    </values>
+  </arg>
+  <arg num="2" specialize="false">
+    <values>
+    </values>
+  </arg>
+</fInfo>
+<fInfo name="farmerNew" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
+  <arg num="0" specialize="false">
+    <values>
       <value type="unknown"/>
     </values>
   </arg>
@@ -440,13 +441,20 @@
       <value type="unknown"/>
     </values>
   </arg>
-  <arg num="2" specialize="false">
+</fInfo>
+<fInfo name="getBitRow" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
+  <arg num="0" specialize="false">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="1" specialize="false">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
 </fInfo>
-<fInfo name="farmerNew" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
+<fInfo name="getBitSection" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
   <arg num="0" specialize="false">
     <values>
       <value type="unknown"/>
@@ -617,10 +625,9 @@
   </arg>
 </fInfo>
 <fInfo name="i2c_master" global="true" specialize="true" noreturn="false" doNotSpecialize="false" numParams="5">
-  <arg num="0" specialize="false">
+  <arg num="0" specialize="true">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value>
     </values>
   </arg>
   <arg num="1" specialize="true">
@@ -630,26 +637,23 @@
   </arg>
   <arg num="2" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
   <arg num="3" specialize="false">
     <values>
-      <value type="unknown"/>
     </values>
   </arg>
-  <arg num="4" specialize="true">
+  <arg num="4" specialize="false">
     <values>
-      <value type="intval"><intval isSigned="true" val="10"/></value>
     </values>
   </arg>
  <specializations>
    <specialization id="0">
-    <arg num="0"><values><value type="unknown"/></values></arg>
+    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value></values></arg>
     <arg num="1"><values><value type="intval"><intval isSigned="true" val="1"/></value></values></arg>
     <arg num="2"><values><value type="unknown"/></values></arg>
     <arg num="3"><values><value type="unknown"/></values></arg>
-    <arg num="4"><values><value type="intval"><intval isSigned="true" val="10"/></value></values></arg>
+    <arg num="4"><values><value type="unknown"/></values></arg>
    </specialization>
  </specializations>
 </fInfo>
@@ -691,7 +695,7 @@
   </arg>
   <arg num="2" specialize="true">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value>
+      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value>
     </values>
   </arg>
   <arg num="3" specialize="false">
@@ -702,7 +706,7 @@
    <specialization id="0">
     <arg num="0"><values><value type="interface"/></values></arg>
     <arg num="1"><values><value type="unknown"/></values></arg>
-    <arg num="2"><values><value type="interface"><interfaceInfo index="0" type="dist" func="i2c_master" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value></values></arg>
+    <arg num="2"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" impId="0" param="0"/></value></values></arg>
     <arg num="3"><values><value type="unknown"/></values></arg>
    </specialization>
  </specializations>
@@ -814,6 +818,7 @@
       <value type="intval"><intval isSigned="true" val="10"/></value>
       <value type="intval"><intval isSigned="true" val="11"/></value>
       <value type="intval"><intval isSigned="true" val="16"/></value>
+      <value type="intval"><intval isSigned="true" val="32"/></value>
     </values>
   </arg>
 </fInfo>
@@ -821,10 +826,20 @@
 </fInfo>
 <fInfo name="operation_complete" global="true" interface="i2c_master_async_if" specialize="false" noreturn="false" doNotSpecialize="false" numParams="0">
 </fInfo>
-<fInfo name="orientation" global="true" specialize="true" noreturn="true" doNotSpecialize="false" numParams="2">
-  <arg num="0" specialize="true">
+<fInfo name="orientation" global="true" specialize="false" noreturn="true" doNotSpecialize="false" numParams="2">
+  <arg num="0" specialize="false">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
+    </values>
+  </arg>
+  <arg num="1" specialize="false">
+    <values>
+    </values>
+  </arg>
+</fInfo>
+<fInfo name="packRow" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
+  <arg num="0" specialize="false">
+    <values>
+      <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
@@ -832,12 +847,13 @@
       <value type="unknown"/>
     </values>
   </arg>
- <specializations>
-   <specialization id="0">
-    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value></values></arg>
-    <arg num="1"><values><value type="unknown"/></values></arg>
-   </specialization>
- </specializations>
+</fInfo>
+<fInfo name="packSection" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="1">
+  <arg num="0" specialize="false">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
 </fInfo>
 <fInfo name="read" global="true" interface="i2c_master_async_if" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
@@ -879,9 +895,8 @@
   </arg>
 </fInfo>
 <fInfo name="read_acceleration" global="true" specialize="true" noreturn="false" doNotSpecialize="false" numParams="2">
-  <arg num="0" specialize="true">
+  <arg num="0" specialize="false">
     <values>
-      <value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value>
     </values>
   </arg>
   <arg num="1" specialize="true">
@@ -891,7 +906,7 @@
   </arg>
  <specializations>
    <specialization id="0">
-    <arg num="0"><values><value type="interface"><interfaceInfo index="0" type="dist" func="_Si2c_master_0" global="true" impUnit="../src/main.xc" impId="2" param="0"/></value></values></arg>
+    <arg num="0"><values><value type="unknown"/></values></arg>
     <arg num="1"><values><value type="intval"><intval isSigned="true" val="1"/></value></values></arg>
    </specialization>
  </specializations>
@@ -1164,9 +1179,5 @@
 <fCall name="i2c_master" global="true" callerUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" numArgs="5" impId="0" specializationId="0">
 </fCall>
 <fCall name="i2c_master_async_aux" global="true" callerUnit="/Users/CharlieHasALamb/Library/Mobile Documents/com~apple~CloudDocs/xTIMEWorkspace/gameoflife/lib_i2c/src/i2c_master_async.xc" numArgs="4" impId="1" specializationId="0">
-</fCall>
-<fCall name="i2c_master" global="true" callerUnit="../src/main.xc" numArgs="5" impId="2" specializationId="0">
-</fCall>
-<fCall name="orientation" global="true" callerUnit="../src/main.xc" numArgs="2" impId="3" specializationId="0">
 </fCall>
 </preCompilationAnalysis>

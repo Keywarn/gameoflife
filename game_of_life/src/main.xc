@@ -13,7 +13,7 @@
 #define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  1000                  //no. iterations
+#define ITER  1                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
 #define INFNAME "test.pgm"
@@ -41,13 +41,14 @@ dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
 enum state {alive = 255, dead = 0};
 typedef enum state state;
 
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 // Read Image from PGM file from path infname[] to channel c_out
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-//MOD is really slow
 uchar mod(uchar val, int dval, uchar divisor) {
     if(dval > 1 || dval < -1) {
         printf("Incorrect dval used, shutting down");
@@ -56,6 +57,34 @@ uchar mod(uchar val, int dval, uchar divisor) {
     if(val == 0 && dval == -1) return(divisor-1);
     if(val == divisor-1 && dval == 1) return(0);
     return(val + dval);
+}
+
+short packSection(uchar section[16]){
+    short data = 0 & 1;
+    for (int i = 0; i < 16; i++){
+        data = data << 1 | (1 & (section[i] == 255 ? 1 : 0));
+    }
+    return data;
+}
+
+void packRow(uchar row[IMWD], short packedRow[IMWD/16]){
+    uchar section[16];
+    for (int sections = 0; sections < IMWD/16; sections++){
+        for (int i = 0; i < 16; i++){
+            section[i] = row[i];
+        }
+       packedRow[sections] = packSection(section);
+    }
+}
+
+uchar getBitSection(short section, uchar relPos){
+    return((section >> (15-relPos)) & 1);
+}
+
+uchar getBitRow(short row[IMWD/16],int pos){
+    uchar sectionIndex = pos/16;
+
+    return (getBitSection(row[sectionIndex], pos % 16));
 }
 
 void modTest(){
@@ -473,6 +502,16 @@ void orientation( client interface i2c_master_if i2c, chanend toDist) {
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
+    /*
+    uchar testArray[32] = {0,255,0,255,255,255,0,0,255,0,0,0,255,0,0,255,0,255,0,255,255,255,0,0,255,0,0,0,255,0,0,255};
+    short testShort[2];
+
+    packRow(testArray, testShort);
+
+    for(int i = 0; i < 32; i++){
+        printf("i: %d -> %d\n", i, getBitRow(testShort, i));
+    }
+    */
 
     i2c_master_if i2c[1];               //interface to orientation
 
