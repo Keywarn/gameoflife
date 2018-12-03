@@ -9,8 +9,8 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 16                  //image height
-#define IMWD 16                  //image width
+#define IMHT 64                  //image height
+#define IMWD 64                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
 #define ITER  1                  //no. iterations
@@ -256,6 +256,16 @@ void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
             }
         }
     }
+    for (int s=0; s < SPLIT; s++) {
+            for (int y=0; y < PART_SIZE; y++) {
+                int actualY = PART_SIZE * s + y;
+
+                for (int x=0; x < IMWD; x++) {
+                    endMap[actualY][x] = newMap[s][y][x];
+                }
+            }
+        }
+
     //printf("\nFARMER: ended!");
 }
 
@@ -464,7 +474,7 @@ int main(void) {
 
     i2c_master_if i2c[1];               //interface to orientation
 
-    char infname[] = "test.pgm";     //put your input image path here
+    char infname[] = "64x64.pgm";     //put your input image path here
     char outfname[] = "testout.pgm"; //put your output image path here
     chan c_inIO, c_outIO, c_control;    //extend your channel definitions here
 
