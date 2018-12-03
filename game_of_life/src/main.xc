@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 64                  //image height
-#define IMWD 64                  //image width
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  1                  //no. iterations
+#define ITER  5000                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "64x64.pgm"
+#define INFNAME "test.pgm"
 
 typedef unsigned char uchar;
 
@@ -24,6 +24,10 @@ on tile[0]: port p_scl = XS1_PORT_1E;         //interface ports to orientation
 on tile[0]: port p_sda = XS1_PORT_1F;
 on tile[0] : in port buttons = XS1_PORT_4E;
 on tile[0] : out port leds = XS1_PORT_4F;//port for buttons
+
+// led colours
+#define LED_GREEN_SEP 1
+#define LED_GREEN 4
 
 #define FXOS8700EQ_I2C_ADDR 0x1E  //register addresses for orientation
 #define FXOS8700EQ_XYZ_DATA_CFG_REG 0x0E
@@ -272,13 +276,14 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
     //printf("\nWORKER: ended!");
 }
 
-void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
+void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
     // SETUP
     // receive map
     uchar newMap[SPLIT][PART_SIZE][IMWD];
 
     // LOOP
     for (int i=0; i<ITER; i++) {
+        ledChan <: (uchar) LED_GREEN_SEP;
         // receive row
         for (int i=0; i < SPLIT; i++) {
             slave {
@@ -350,7 +355,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   printf( "Waiting for Button Press...\n" );
   int throw;
   buttChan :> throw;
-  ledChan <: (uchar) 4;
+  ledChan <: (uchar) LED_GREEN;
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
   //change the image according to the "Game of Life"
@@ -366,7 +371,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
     }
   }
 
-  ledChan <: (uchar) 4;
+  ledChan <: (uchar) LED_GREEN;
   unsigned time;
   timer t;
   t :> time;
@@ -407,7 +412,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   uchar endMap[IMHT][IMWD];
 
   par {
-    farmerNew(dist, endMap);
+    farmerNew(dist, ledChan, endMap);
     par (int f=0; f < 4; f++) {
         workerNew(f,
                 dist[f],

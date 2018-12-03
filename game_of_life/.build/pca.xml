@@ -468,13 +468,18 @@
     </values>
   </arg>
 </fInfo>
-<fInfo name="farmerNew" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="2">
+<fInfo name="farmerNew" global="true" specialize="false" noreturn="false" doNotSpecialize="false" numParams="3">
   <arg num="0" specialize="false">
     <values>
       <value type="unknown"/>
     </values>
   </arg>
   <arg num="1" specialize="false">
+    <values>
+      <value type="unknown"/>
+    </values>
+  </arg>
+  <arg num="2" specialize="false">
     <values>
       <value type="unknown"/>
     </values>
@@ -869,7 +874,7 @@
       <value type="intval"><intval isSigned="true" val="4"/></value>
       <value type="intval"><intval isSigned="true" val="10"/></value>
       <value type="intval"><intval isSigned="true" val="11"/></value>
-      <value type="intval"><intval isSigned="true" val="64"/></value>
+      <value type="intval"><intval isSigned="true" val="16"/></value>
     </values>
   </arg>
 </fInfo>
