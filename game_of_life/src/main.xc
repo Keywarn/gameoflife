@@ -9,19 +9,21 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 16                  //image height
-#define IMWD 16                  //image width
+#define IMHT 64                  //image height
+#define IMWD 64                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
 #define ITER  1                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "test.pgm"
+#define INFNAME "64x64.pgm"
 
 typedef unsigned char uchar;
 
 on tile[0]: port p_scl = XS1_PORT_1E;         //interface ports to orientation
 on tile[0]: port p_sda = XS1_PORT_1F;
+on tile[0] : in port buttons = XS1_PORT_4E;
+on tile[0] : out port leds = XS1_PORT_4F;//port for buttons
 
 #define FXOS8700EQ_I2C_ADDR 0x1E  //register addresses for orientation
 #define FXOS8700EQ_XYZ_DATA_CFG_REG 0x0E
@@ -42,12 +44,6 @@ enum state {alive = 255, dead = 0};
 typedef enum state state;
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-// Read Image from PGM file from path infname[] to channel c_out
-//
-/////////////////////////////////////////////////////////////////////////////////////////
 
 uchar mod(uchar val, int dval, uchar divisor) {
     if(dval > 1 || dval < -1) {
@@ -92,6 +88,39 @@ void modTest(){
     assert (mod(5, 1, 10) == 6);
     assert (mod(0,-1,10) == 9);
 }
+
+void buttonListener(in port b, chanend buttChan) {
+  int r;
+  while (1) {
+    b when pinseq(15)  :> r;    // check that no button is pressed
+    b when pinsneq(15) :> r;    // check if some buttons are pressed
+    if (r==14) buttChan <: r;             // send button pattern to userAnt
+  }
+}
+
+int ledManager(out port p, chanend ledChan) {
+  uchar data;
+  uchar sepGreen = 1;
+  uchar blue = 2;
+  uchar green = 4;
+  uchar red = 8;
+
+  int pattern = 0; //1st bit...separate green LED
+               //2nd bit...blue LED
+               //3rd bit...green LED
+               //4th bit...red LED
+  while (1) {
+    ledChan :> data; //receive new pattern from visualiser
+    pattern = pattern ^ data;
+    p <: pattern;                //send pattern to LED port
+  }
+  return 0;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Read Image from PGM file from path infname[] to channel c_out
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 void DataInStream(char infname[], chanend c_out) {
   int res;
@@ -308,7 +337,7 @@ void farmerNew (chanend dist[], uchar endMap[IMHT][IMWD]) {
 // Currently the function just inverts the image
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-void distributor(chanend c_in, chanend c_out, chanend fromAcc)
+void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan, chanend ledChan)
 {
   uchar val;
 
@@ -318,9 +347,10 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
-  printf( "Waiting for Board Tilt...\n" );
-  //fromAcc :> int value; //PUT THIS LINE BACK FOR TILT
-
+  printf( "Waiting for Button Press...\n" );
+  int throw;
+  buttChan :> throw;
+  ledChan <: (uchar) 4;
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
   //change the image according to the "Game of Life"
@@ -336,6 +366,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
     }
   }
 
+  ledChan <: (uchar) 4;
   unsigned time;
   timer t;
   t :> time;
@@ -517,14 +548,16 @@ int main(void) {
 
     //char infname[] = "test.pgm";     //put your input image path here
     //char outfname[] = "testout.pgm"; //put your output image path here
-    chan c_inIO, c_outIO, c_control;    //extend your channel definitions here
+    chan c_inIO, c_outIO, c_control, buttChan, ledChan;    //extend your channel definitions here
 
     par {
+        on tile[0]: buttonListener(buttons, buttChan);
+        on tile[0]: ledManager(leds, ledChan);
         on tile[0]: i2c_master(i2c, 1, p_scl, p_sda, 10);   //server thread providing orientation data
         on tile[0]: orientation(i2c[0],c_control);        //client thread reading orientation data
         on tile[0]: DataInStream(INFNAME, c_inIO);          //thread to read in a PGM image
         on tile[0]: DataOutStream(OUTFNAME, c_outIO);       //thread to write out a PGM image
-        on tile[1]: distributor(c_inIO, c_outIO, c_control);//thread to coordinate work on image
+        on tile[1]: distributor(c_inIO, c_outIO, c_control, buttChan, ledChan);//thread to coordinate work on image
       }
 
       return 0;
