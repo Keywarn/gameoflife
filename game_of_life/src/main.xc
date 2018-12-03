@@ -9,16 +9,19 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 64                  //image height
-#define IMWD 64                  //image width
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  1                  //no. iterations
+#define ITER  1000                  //no. iterations
+
+#define OUTFNAME "testout.pgm"
+#define INFNAME "test.pgm"
 
 typedef unsigned char uchar;
 
-port p_scl = XS1_PORT_1E;         //interface ports to orientation
-port p_sda = XS1_PORT_1F;
+on tile[0]: port p_scl = XS1_PORT_1E;         //interface ports to orientation
+on tile[0]: port p_sda = XS1_PORT_1F;
 
 #define FXOS8700EQ_I2C_ADDR 0x1E  //register addresses for orientation
 #define FXOS8700EQ_XYZ_DATA_CFG_REG 0x0E
@@ -379,10 +382,10 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc)
 
   // TIME CHECK
   printf("\n--------\nTIME:\n* Setup: %d\n* Loop: %d\n* End: %d\n* TOTAL: %d\n",
-        (setup)/1000000,
-        (loop)/1000000,
-        (end)/1000000,
-        (_end - time)/1000000);
+        (setup)/100000,
+        (loop)/100000,
+        (end)/100000,
+        (_end - time)/100000);
 
   printf("\n Output complete \n");
 }
@@ -470,20 +473,19 @@ void orientation( client interface i2c_master_if i2c, chanend toDist) {
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
-    modTest();
 
     i2c_master_if i2c[1];               //interface to orientation
 
-    char infname[] = "64x64.pgm";     //put your input image path here
-    char outfname[] = "testout.pgm"; //put your output image path here
+    //char infname[] = "test.pgm";     //put your input image path here
+    //char outfname[] = "testout.pgm"; //put your output image path here
     chan c_inIO, c_outIO, c_control;    //extend your channel definitions here
 
     par {
-        i2c_master(i2c, 1, p_scl, p_sda, 10);   //server thread providing orientation data
-        orientation(i2c[0],c_control);        //client thread reading orientation data
-        DataInStream(infname, c_inIO);          //thread to read in a PGM image
-        DataOutStream(outfname, c_outIO);       //thread to write out a PGM image
-        distributor(c_inIO, c_outIO, c_control);//thread to coordinate work on image
+        on tile[0]: i2c_master(i2c, 1, p_scl, p_sda, 10);   //server thread providing orientation data
+        on tile[0]: orientation(i2c[0],c_control);        //client thread reading orientation data
+        on tile[0]: DataInStream(INFNAME, c_inIO);          //thread to read in a PGM image
+        on tile[0]: DataOutStream(OUTFNAME, c_outIO);       //thread to write out a PGM image
+        on tile[1]: distributor(c_inIO, c_outIO, c_control);//thread to coordinate work on image
       }
 
       return 0;
