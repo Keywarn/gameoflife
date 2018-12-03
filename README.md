@@ -5,6 +5,7 @@ Game Of Life
 
 ### Code
 
+[] bitpacking
 [] button/orientation/LED behaviour
 [] larger images
 [] different from master/slave
