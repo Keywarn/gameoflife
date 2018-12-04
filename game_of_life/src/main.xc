@@ -13,7 +13,7 @@
 #define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  5000                  //no. iterations
+#define ITER  1                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
 #define INFNAME "test.pgm"
@@ -98,7 +98,7 @@ void buttonListener(in port b, chanend buttChan) {
   while (1) {
     b when pinseq(15)  :> r;    // check that no button is pressed
     b when pinsneq(15) :> r;    // check if some buttons are pressed
-    if (r==14) buttChan <: r;             // send button pattern to userAnt
+    if (r==14) buttChan <: r;             // start button pattern sent to distributor
   }
 }
 
@@ -369,6 +369,18 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
       map[y][x] = val;
       //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
+  }
+
+  short packedMap[IMHT][IMWD/16];
+  for(int y = 0;y<IMHT;y++){
+      packRow(map[y],packedMap[y]);
+  }
+  for(int y = 0; y<IMHT;y++){
+      printf("Row: %d -> ", y);
+      for(int x = 0; x<IMWD; x++){
+          printf("%d", getBitRow(packedMap[y],x));
+      }
+      printf("\n");
   }
 
   ledChan <: (uchar) LED_GREEN;
