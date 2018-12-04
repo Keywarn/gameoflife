@@ -204,7 +204,7 @@ int getNeighbourSplit(uchar section[PART_SIZE][IMWD], uchar above[], uchar below
 int getNeighboursSplit(short row[PART_SIZE][IMWD/16], short above[], short below[], int x, int y, int i) {
     int sum = 0;
     for (int dir=0; dir < 8; dir++)
-        sum += getNeighbourSplit(row, above, below, dir, x, y);
+        sum += getNeighbourSplit(row, above, below, dir, x, y, i);
     return sum;
 }
 
