@@ -188,6 +188,7 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
 
 // where y is relative to PART_SIZE
 int getNeighbourSplit(uchar section[PART_SIZE][IMWD], uchar above[], uchar below[], int dir, int x, int y) {
+
     if (y == 0 && dirMod[dir][0] == -1) {
         return above[mod(x, dirMod[dir][1], IMWD)] / alive;
     }
@@ -200,7 +201,7 @@ int getNeighbourSplit(uchar section[PART_SIZE][IMWD], uchar above[], uchar below
     }
 }
 
-int getNeighboursSplit(uchar row[PART_SIZE][IMWD], uchar above[], uchar below[], int x, int y) {
+int getNeighboursSplit(short row[PART_SIZE][IMWD/16], short above[], short below[], int x, int y, int i) {
     int sum = 0;
     for (int dir=0; dir < 8; dir++)
         sum += getNeighbourSplit(row, above, below, dir, x, y);
@@ -220,13 +221,13 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[IMWD], uchar below[IMWD]) {
+void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short above[IMWD/16], short below[IMWD/16]) {
     /*
      * SETUP
      */
 
     // memcpy init. values into own
-    uchar currentRow[PART_SIZE][IMWD], currentAbove[IMWD], currentBelow[IMWD];
+    short currentRow[PART_SIZE][IMWD/16], currentAbove[IMWD/16], currentBelow[IMWD/16];
     memcpy(&currentRow, &row, sizeof(row));
     memcpy(&currentAbove, &above, sizeof(above));
     memcpy(&currentBelow, &below, sizeof(below));
@@ -234,20 +235,25 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
     /*
      * LOOP
      */
-    uchar newRow[PART_SIZE][IMWD];
+    short newRow[PART_SIZE][IMWD/16];
 
     for (int i=0; i<ITER; i++) {
         // process
         for (int y=0; y < PART_SIZE; y++) {
-            for (int x=0; x < IMWD; x++) {
-                newRow[y][x] = dead;
-                int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y);
-                int isAlive = currentRow[y][x] == alive;
+            for (int x=0; x < IMWD/16; x++) {
 
-                if (neighbours < 2 && isAlive) newRow[y][x] = dead;
-                else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
-                else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
-                else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
+                newRow[y][x] = dead;
+                //INSERT LOGIC HERE
+                for (int i = 0; i < 16; i++){
+
+                    int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y, i);
+                    int isAlive = currentRow[y][x] == alive;
+
+                    if (neighbours < 2 && isAlive) newRow[y][x] = dead;
+                    else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
+                    else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
+                    else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
+                }
             }
         }
 
@@ -276,10 +282,10 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
     //printf("\nWORKER: ended!");
 }
 
-void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
+void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
     // SETUP
     // receive map
-    uchar newMap[SPLIT][PART_SIZE][IMWD];
+    short newMap[SPLIT][PART_SIZE][IMWD/16];
 
     // LOOP
     for (int i=0; i<ITER; i++) {
@@ -291,7 +297,7 @@ void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
                 dist[i] :> part;
 
                 for (int y=0; y < PART_SIZE; y++) {
-                    for (int x=0; x < IMWD; x++) {
+                    for (int x=0; x < IMWD/16; x++) {
                         dist[i] :> newMap[part][y][x];
                     }
                 }
@@ -312,11 +318,11 @@ void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
         for (int s=0; s < SPLIT; s++) {
             master {
                 // btm
-                for (int x=0; x < IMWD; x++) {
+                for (int x=0; x < IMWD/16; x++) {
                     dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
                 }
                 // top
-                for (int x=0; x < IMWD; x++) {
+                for (int x=0; x < IMWD/16; x++) {
                     dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
                 }
             }
@@ -326,7 +332,7 @@ void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
             for (int y=0; y < PART_SIZE; y++) {
                 int actualY = PART_SIZE * s + y;
 
-                for (int x=0; x < IMWD; x++) {
+                for (int x=0; x < IMWD/16; x++) {
                     endMap[actualY][x] = newMap[s][y][x];
                 }
             }
@@ -394,16 +400,16 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   chan dist[SPLIT];
 
   // split map into parts
-  uchar mapParts[SPLIT][PART_SIZE][IMWD];
+  short mapParts[SPLIT][PART_SIZE][IMWD/16];
   for (int s=0; s < SPLIT; s++) {
       int yOffset = s * SPLIT;
       for (int y=0; y < PART_SIZE; y++) {
           int actualY = y + yOffset;
-          memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
+          memcpy(&mapParts[s][y], &packedMap[actualY], sizeof(packedMap[actualY]));
       }
   }
   // create arrays of separate bottom & top rows for each part
-  uchar rowBtms[SPLIT][IMWD], rowTops[SPLIT][IMWD];
+  int rowBtms[SPLIT][IMWD/16], rowTops[SPLIT][IMWD/16];
   for (int s=0; s < SPLIT; s++) {
       // bottom rows
       memcpy(&rowBtms[s],
@@ -421,7 +427,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
    * LOOP
    */
   // passed to farmer & copied to
-  uchar endMap[IMHT][IMWD];
+  short endMap[IMHT][IMWD/16];
 
   par {
     farmerNew(dist, ledChan, endMap);
@@ -447,7 +453,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   // copy back map
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD; x++ ) {
-          c_out <: endMap[y][x];
+          c_out <: getBitRow(endMap[y],x);
       }
   }
 
