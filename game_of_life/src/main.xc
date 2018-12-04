@@ -13,7 +13,7 @@
 #define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  5000                  //no. iterations
+#define ITER  1000                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
 #define INFNAME "test.pgm"
@@ -28,6 +28,9 @@ on tile[0] : out port leds = XS1_PORT_4F;//port for buttons
 // led colours
 #define LED_GREEN_SEP 1
 #define LED_GREEN 4
+// buttons
+#define BTN_START 14
+#define BTN_EXPORT 13
 
 #define FXOS8700EQ_I2C_ADDR 0x1E  //register addresses for orientation
 #define FXOS8700EQ_XYZ_DATA_CFG_REG 0x0E
@@ -98,7 +101,7 @@ void buttonListener(in port b, chanend buttChan) {
   while (1) {
     b when pinseq(15)  :> r;    // check that no button is pressed
     b when pinsneq(15) :> r;    // check if some buttons are pressed
-    if (r==14) buttChan <: r;             // send button pattern to userAnt
+    if (r==BTN_EXPORT || r==BTN_START) buttChan <: r; // send button pattern
   }
 }
 
@@ -220,7 +223,7 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[IMWD], uchar below[IMWD]) {
+void workerNew (int part, chanend dist, chanend distRec, uchar row[PART_SIZE][IMWD], uchar above[IMWD], uchar below[IMWD]) {
     /*
      * SETUP
      */
@@ -255,71 +258,102 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
         memcpy(&currentRow, &newRow, sizeof(newRow));
 
         // send row
-        master {
-            dist <: part;
-
-            for (int y=0; y < PART_SIZE; y++) {
-                for (int x=0; x < IMWD; x++) {
-                    dist <: currentRow[y][x];
-                }
+        dist <: part;
+        for (int y=0; y < PART_SIZE; y++) {
+            for (int x=0; x < IMWD; x++) {
+                dist <: currentRow[y][x];
             }
         }
 
+        distRec <: part;
         // receive rowTop & rowBototm
-        slave {
-            for (int x=0; x < IMWD; x++)
-                dist :> currentAbove[x];
-            for (int x=0; x < IMWD; x++)
-                dist :> currentBelow[x];
-        }
+        for (int x=0; x < IMWD; x++)
+            distRec :> currentAbove[x];
+        for (int x=0; x < IMWD; x++)
+            distRec :> currentBelow[x];
     }
     //printf("\nWORKER: ended!");
 }
 
-void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
+void farmerNew (chanend dist[SPLIT], chanend distRec[SPLIT], chanend buttChan, chanend ledChan, uchar endMap[IMHT][IMWD]) {
     // SETUP
     // receive map
     uchar newMap[SPLIT][PART_SIZE][IMWD];
 
     // LOOP
     for (int i=0; i<ITER; i++) {
+        // change state (for flashing)
         ledChan <: (uchar) LED_GREEN_SEP;
-        // receive row
-        for (int i=0; i < SPLIT; i++) {
-            slave {
-                int part = 0;
-                dist[i] :> part;
 
+        int btn;
+
+        // number of workers which have sent stuff back
+        int back = 0;
+
+        // so we can check for button presses
+        select {
+            case buttChan :> btn:
+                printf("\nbutton!\n");
+                break;
+            case dist[int j] :> int part:
+                // read rest
                 for (int y=0; y < PART_SIZE; y++) {
                     for (int x=0; x < IMWD; x++) {
-                        dist[i] :> newMap[part][y][x];
+                        dist[j] :> newMap[j][y][x];
                     }
                 }
-            }
-        }
+                back++;
+                break;
+            case distRec[int j] :> int part:
+                if (back != SPLIT) {
+                    // where -1 means 'NOT READY!'
+                    distRec[j] <: -1;
+                } else {
+                    // btm
+                    for (int x=0; x < IMWD; x++) {
+                        distRec[j] <: newMap[mod(j, -1, SPLIT)][PART_SIZE - 1][x];
+                    }
+                    // top
+                    for (int x=0; x < IMWD; x++) {
+                        distRec[j] <: newMap[mod(j, 1, SPLIT)][0][x];
+                    }
+                }
+                break;
+            /*default:
+                // receive row
+                for (int i=0; i < SPLIT; i++) {
+                    int part = 0;
+                    dist[i] :> part;
 
-        // TESTING: print arr
-        /*for (int s=0; s < SPLIT; s++) {
-            for (int y=0; y < PART_SIZE; y++) {
-                for (int x=0; x < IMWD; x++) {
-                    printf("%d, ", newMap[s][y][x]);
-                }
-                printf("\n");
-            }
-        }*/
+                    for (int y=0; y < PART_SIZE; y++) {
+                        for (int x=0; x < IMWD; x++) {
+                            dist[i] :> newMap[part][y][x];
+                        }
+                    }
+                }*/
 
-        // send rowTop & rowBottom
-        for (int s=0; s < SPLIT; s++) {
-            master {
-                // btm
-                for (int x=0; x < IMWD; x++) {
-                    dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
+                // TESTING: print arr
+                /*for (int s=0; s < SPLIT; s++) {
+                    for (int y=0; y < PART_SIZE; y++) {
+                        for (int x=0; x < IMWD; x++) {
+                            printf("%d, ", newMap[s][y][x]);
+                        }
+                        printf("\n");
+                    }
+                }*/
+
+                // send rowTop & rowBottom
+                /*for (int s=0; s < SPLIT; s++) {
+                    // btm
+                    for (int x=0; x < IMWD; x++) {
+                        dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
+                    }
+                    // top
+                    for (int x=0; x < IMWD; x++) {
+                        dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
+                    }
                 }
-                // top
-                for (int x=0; x < IMWD; x++) {
-                    dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
-                }
-            }
+                break;*/
         }
     }
     for (int s=0; s < SPLIT; s++) {
@@ -352,9 +386,14 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
 
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
+
+  // wait for button input
   printf( "Waiting for Button Press...\n" );
-  int throw;
-  buttChan :> throw;
+  int throw = 0;
+  while (throw != BTN_START) {
+      buttChan :> throw;
+  }
+
   ledChan <: (uchar) LED_GREEN;
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
@@ -380,6 +419,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
    * INITIAL STEP
    */
   chan dist[SPLIT];
+  chan distRec[SPLIT];
 
   // split map into parts
   uchar mapParts[SPLIT][PART_SIZE][IMWD];
@@ -412,10 +452,11 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   uchar endMap[IMHT][IMWD];
 
   par {
-    farmerNew(dist, ledChan, endMap);
+    farmerNew(dist, distRec, buttChan, ledChan, endMap);
     par (int f=0; f < 4; f++) {
         workerNew(f,
                 dist[f],
+                distRec[f],
                 mapParts[f],
                 rowBtms[f],
                 rowTops[f]);
