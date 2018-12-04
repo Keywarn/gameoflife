@@ -77,11 +77,11 @@ void packRow(uchar row[IMWD], short packedRow[IMWD/16]){
     }
 }
 
-uchar getBitSection(short section, uchar relPos){
+int getBitSection(short section, uchar relPos){
     return((section >> (15-relPos)) & 1);
 }
 
-uchar getBitRow(short row[IMWD/16],int pos){
+int getBitRow(short row[IMWD/16],int pos){
     uchar sectionIndex = pos/16;
 
     return (getBitSection(row[sectionIndex], pos % 16));
@@ -187,17 +187,26 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
 }
 
 // where y is relative to PART_SIZE
-int getNeighbourSplit(uchar section[PART_SIZE][IMWD], uchar above[], uchar below[], int dir, int x, int y) {
+int getNeighbourSplit(short section[PART_SIZE][IMWD/16], short above[], short below[], int dir, int x, int y, int i) {
 
     if (y == 0 && dirMod[dir][0] == -1) {
-        return above[mod(x, dirMod[dir][1], IMWD)] / alive;
+        //------------------------------------------------------------------------------------------------------
+        //ADD LOGIC HERE, JUST A ONE LINER BUT BRAIN TOO DEAD TO MUDDLE THROUGH, SHOULD BE EASY
+        //------------------------------------------------------------------------------------------------------
+        //return above[mod(x, dirMod[dir][1], IMWD)] / alive;
+        return 0;
     }
     else if (y == PART_SIZE - 1 && dirMod[dir][0] == 1) {
-        return below[mod(x, dirMod[dir][1], IMWD)] / alive;
+        //------------------------------------------------------------------------------------------------------
+        //ADD LOGIC HERE, JUST A ONE LINER BUT BRAIN TOO DEAD TO MUDDLE THROUGH, SHOULD BE EASY
+        //------------------------------------------------------------------------------------------------------
+        //return below[mod(x, dirMod[dir][1], IMWD)] / alive;
+        return 0;
     }
     else {
         //printf("(%d, %d) -+> (,) -> (%d, %d)\n", x, y, mod(x, dirMod[dir][1], IMWD), y + dirMod[dir][0]);
-        return section[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)] / alive;
+        //return section[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)] / alive;
+        return getBitRow(section[y + dirMod[dir][0]], mod(x*16 +i, dirMod[dir][1], IMWD));
     }
 }
 
@@ -242,21 +251,26 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
         for (int y=0; y < PART_SIZE; y++) {
             for (int x=0; x < IMWD/16; x++) {
 
-                newRow[y][x] = dead;
+                newRow[y][x] = 0;
                 //INSERT LOGIC HERE
                 for (int i = 0; i < 16; i++){
 
                     int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y, i);
-                    int isAlive = currentRow[y][x] == alive;
+                    int isAlive = getBitRow(currentRow[y],(x*16)+i);
 
-                    if (neighbours < 2 && isAlive) newRow[y][x] = dead;
-                    else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = alive;
-                    else if(neighbours > 3 && isAlive) newRow[y][x] = dead;
-                    else if(neighbours == 3 && !isAlive) newRow[y][x] = alive;
+                    //WE NEED A SET BIT FUNCTION, NOT newROW[x][y], this would set the whole short of the section to 0
+                    //------------------------------------------------------------------------------------------------------
+                    if (neighbours < 2 && isAlive) newRow[y][x] = 0;
+                    else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = 1;
+                    else if(neighbours > 3 && isAlive) newRow[y][x] = 0;
+                    else if(neighbours == 3 && !isAlive) newRow[y][x] = 1;
+                    //------------------------------------------------------------------------------------------------------
                 }
             }
         }
 
+        //THIS SECTION HASN'T BEEN MODIFIED FOR PACKING YET, WILL BE SIMPLE ONCE WE GET THE ABOVE WORKING
+        //-----------------------------------------------------------------------------------------------
         // copy newRow -> current
         memcpy(&currentRow, &newRow, sizeof(newRow));
 
@@ -279,6 +293,7 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
                 dist :> currentBelow[x];
         }
     }
+    //------------------------------------------------------------------------------------------------------
     //printf("\nWORKER: ended!");
 }
 
@@ -409,7 +424,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
       }
   }
   // create arrays of separate bottom & top rows for each part
-  int rowBtms[SPLIT][IMWD/16], rowTops[SPLIT][IMWD/16];
+  short rowBtms[SPLIT][IMWD/16], rowTops[SPLIT][IMWD/16];
   for (int s=0; s < SPLIT; s++) {
       // bottom rows
       memcpy(&rowBtms[s],
