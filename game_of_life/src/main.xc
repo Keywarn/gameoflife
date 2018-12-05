@@ -98,8 +98,28 @@ void buttonListener(in port b, chanend buttChan) {
   while (1) {
     b when pinseq(15)  :> r;    // check that no button is pressed
     b when pinsneq(15) :> r;    // check if some buttons are pressed
-    if (r==14) buttChan <: r;             // start button pattern sent to distributor
+    if (r==14) buttChan <: r;   // start button pattern sent to distributor
   }
+}
+
+typedef interface buttI {
+    int isButtDown(int b);
+} buttI;
+
+void buttonServer(server buttI myButt, chanend buttChan) {
+    int buttDown = 0;
+    while (1) {
+        select {
+            case myButt.isButtDown(int b) -> int ret:
+                printf("checking if button %d is down\n", b);
+                ret = b == buttDown ? 1 : 0;
+                break;
+            case buttChan :> int b:
+                printf("buttchan read in %d!\n", b);
+                buttDown = b;
+                break;
+        }
+    }
 }
 
 int ledManager(out port p, chanend ledChan) {
