@@ -270,19 +270,14 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
                     int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y, i);
                     int isAlive = getBitRow(currentRow[y],(x*16)+i);
 
-                    //WE NEED A SET BIT FUNCTION, NOT newROW[x][y], this would set the whole short of the section to 0
-                    //------------------------------------------------------------------------------------------------------
-                    if (neighbours < 2 && isAlive) newRow[y][x] = 0;
-                    else if (isAlive && (neighbours == 2 || neighbours == 3)) newRow[y][x] = 1;
-                    else if(neighbours > 3 && isAlive) newRow[y][x] = 0;
-                    else if(neighbours == 3 && !isAlive) newRow[y][x] = 1;
-                    //------------------------------------------------------------------------------------------------------
+                    if (neighbours < 2 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
+                    else if (isAlive && (neighbours == 2 || neighbours == 3)) setBitRow(newRow[y], i + (x*16), 1);
+                    else if(neighbours > 3 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
+                    else if(neighbours == 3 && !isAlive) setBitRow(newRow[y], i + (x*16), 1);
                 }
             }
         }
 
-        //THIS SECTION HASN'T BEEN MODIFIED FOR PACKING YET, WILL BE SIMPLE ONCE WE GET THE ABOVE WORKING
-        //-----------------------------------------------------------------------------------------------
         // copy newRow -> current
         memcpy(&currentRow, &newRow, sizeof(newRow));
 
@@ -291,7 +286,7 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
             dist <: part;
 
             for (int y=0; y < PART_SIZE; y++) {
-                for (int x=0; x < IMWD; x++) {
+                for (int x=0; x < IMWD/16; x++) {
                     dist <: currentRow[y][x];
                 }
             }
@@ -299,13 +294,12 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
 
         // receive rowTop & rowBototm
         slave {
-            for (int x=0; x < IMWD; x++)
+            for (int x=0; x < IMWD/16; x++)
                 dist :> currentAbove[x];
-            for (int x=0; x < IMWD; x++)
+            for (int x=0; x < IMWD/16; x++)
                 dist :> currentBelow[x];
         }
     }
-    //------------------------------------------------------------------------------------------------------
     //printf("\nWORKER: ended!");
 }
 
