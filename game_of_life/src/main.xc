@@ -206,6 +206,7 @@ int getNeighbourSplit(short section[PART_SIZE][IMWD/16], short above[], short be
         //ADD LOGIC HERE, JUST A ONE LINER BUT BRAIN TOO DEAD TO MUDDLE THROUGH, SHOULD BE EASY
         //------------------------------------------------------------------------------------------------------
         //return above[mod(x, dirMod[dir][1], IMWD)] / alive;
+        return getBitRow(above, mod((x*16) + i, dirMod[dir][1], IMWD));
         return 0;
     }
     else if (y == PART_SIZE - 1 && dirMod[dir][0] == 1) {
@@ -213,12 +214,13 @@ int getNeighbourSplit(short section[PART_SIZE][IMWD/16], short above[], short be
         //ADD LOGIC HERE, JUST A ONE LINER BUT BRAIN TOO DEAD TO MUDDLE THROUGH, SHOULD BE EASY
         //------------------------------------------------------------------------------------------------------
         //return below[mod(x, dirMod[dir][1], IMWD)] / alive;
+        return getBitRow(below, mod((x*16) + i, dirMod[dir][1], IMWD));
         return 0;
     }
     else {
         //printf("(%d, %d) -+> (,) -> (%d, %d)\n", x, y, mod(x, dirMod[dir][1], IMWD), y + dirMod[dir][0]);
         //return section[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)] / alive;
-        return getBitRow(section[y + dirMod[dir][0]], mod(x*16 +i, dirMod[dir][1], IMWD));
+        return getBitRow(section[y + dirMod[dir][0]], mod((x*16) +i, dirMod[dir][1], IMWD));
     }
 }
 
