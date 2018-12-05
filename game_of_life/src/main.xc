@@ -87,6 +87,18 @@ int getBitRow(short row[IMWD/16],int pos){
     return (getBitSection(row[sectionIndex], pos % 16));
 }
 
+// where val = 0 or 1
+void setBitRow(short row[IMWD/16], int pos, int val) {
+    uchar sectionIndex = pos/16;
+
+    assert (val == 1 || val == 0);
+
+    // clear bit
+    row[sectionIndex] = row[sectionIndex] & (~(1 << pos));
+    // set bit if val == 1
+    row[sectionIndex] = row[sectionIndex] | (val << pos);
+}
+
 void modTest(){
     assert (mod(10,1,11) == 0);
     assert (mod(5, 1, 10) == 6);
@@ -371,11 +383,18 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   unsigned int _setup, _loop, _end,
                 setup,  loop,  end;
 
+
+  // TESTING STUFF
+  short stuff[] = {8, 1, 2};
+  setBitRow(stuff, 3, 1);
+  printf("\nAHHH: %d\n", stuff[0]);
+
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
   printf( "Waiting for Button Press...\n" );
   int throw;
   buttChan :> throw;
+
   ledChan <: (uchar) LED_GREEN;
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
