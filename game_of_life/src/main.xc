@@ -276,6 +276,158 @@ void workerNew (int part, chanend dist, uchar row[PART_SIZE][IMWD], uchar above[
     //printf("\nWORKER: ended!");
 }
 
+void workerNew2 (int workerId, uchar part[PART_SIZE][IMWD], chanend farmer, chanend workAbove, chanend workBelow) {
+    printf("WORKER %d: Starting...\n", workerId);
+    /*
+     * SETUP
+     */
+    // memcpy into own
+    uchar curPart[PART_SIZE][IMWD], curAbove[IMWD], curBelow[IMWD];
+    memcpy(&curPart, &part, sizeof(part));
+
+    /*
+     * LOOP
+     */
+
+    // 1.
+    // if isEven? part
+    //      send -> below
+    //      recieve BOTTOM from below
+    // else
+    //      recieve TOP from above
+    //      send -> top
+    // 2.
+    // if isEven? part
+    //      send -> above
+    //      recieve TOP from above
+    // else
+    //      recieve BOTTOM from below
+    //      send -> below
+
+    if(workerId % 2 == 0) {
+        for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+        printf("WORKER %d: even; sent to below\n", workerId);
+        for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
+
+        for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
+        for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
+    }else{
+        for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
+        printf("WORKER %d: odd; recieved from above\n", workerId);
+        for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
+
+        for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
+        for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+    }
+
+    // process GoL
+
+    /*
+     * END or INTERRUPT
+     */
+    printf("WORKER %d: Sending final...\n", workerId);
+
+    // send part -> dist
+    for (int y=0; y < PART_SIZE; y++) {
+        for (int x=0; x < IMWD; x++) {
+            farmer <: curPart[y][x];
+        }
+    }
+    printf("WORKER %d: Ending...\n", workerId);
+}
+
+void farmerNew2 (chanend workers[]) {
+    /*
+     * SETUP
+     */
+
+    /*
+     * LOOP
+     */
+    // wait for button press -> interrupt worker if so
+
+
+    /*
+     * END
+     */
+    uchar map[IMHT][IMWD];
+    printf("DIST: End...\n");
+    // copy back map
+    for (int s=0; s < SPLIT; s++) {
+        int yOffset = s * SPLIT;
+        for (int y=0; y < PART_SIZE; y++) {
+            int actualY = y + yOffset;
+            for (int x=0; x < IMWD; x++) {
+                workers[s] :> map[actualY][x];
+            }
+        }
+    }
+
+    // print map
+    for (int y=0; y < IMHT; y++) {
+        for (int x=0; x < IMWD; x++) {
+            printf("%d,\t", map[y][x]);
+        }
+        printf("\n");
+    }
+}
+
+void distributorNew2 (chanend c_in, chanend buttChan) {
+    printf("DIST: Starting...\n");
+    /*
+     * SETUP
+     */
+    // read in map from image
+    uchar map[IMHT][IMWD];
+    for( int y = 0; y < IMHT; y++ ) {
+      for( int x = 0; x < IMWD; x++ ) {
+        c_in :> map[y][x];
+      }
+    }
+
+    // split map into parts
+    uchar mapParts[SPLIT][PART_SIZE][IMWD];
+    for (int s=0; s < SPLIT; s++) {
+        int yOffset = s * SPLIT;
+        for (int y=0; y < PART_SIZE; y++) {
+            int actualY = y + yOffset;
+            memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
+        }
+    }
+
+    // wait for button press
+    //buttChan :> throw;
+
+    /*
+     * LOOP
+     */
+    printf("DIST: Loop...\n");
+    // par statement w/ farmer & workers
+    chan workers[SPLIT];
+    chan btw0_1, btw0_3, btw1_2, btw2_3;
+    par {
+        farmerNew2(workers);
+        workerNew2(0, mapParts[0], workers[0], btw0_3, btw0_1);
+        workerNew2(1, mapParts[1], workers[1], btw0_1, btw1_2);
+        workerNew2(2, mapParts[2], workers[2], btw1_2, btw2_3);
+        workerNew2(3, mapParts[3], workers[3], btw2_3, btw0_3);
+        /*par (int s=0; s < 4; s++) {
+            workerNew2(s,
+                       mapParts[s],
+                       this,
+                       workers[mod(s, -1, SPLIT)],
+                       workers[mod(s, 1, SPLIT)]);
+        }*/
+    }
+
+    /*
+     * END
+     */
+
+
+    printf("DIST: Finishing...\n");
+}
+
 void farmerNew (chanend dist[], chanend ledChan, uchar endMap[IMHT][IMWD]) {
     // SETUP
     // receive map
@@ -562,7 +714,8 @@ int main(void) {
         on tile[0]: orientation(i2c[0],c_control);        //client thread reading orientation data
         on tile[0]: DataInStream(INFNAME, c_inIO);          //thread to read in a PGM image
         on tile[0]: DataOutStream(OUTFNAME, c_outIO);       //thread to write out a PGM image
-        on tile[1]: distributor(c_inIO, c_outIO, c_control, buttChan, ledChan);//thread to coordinate work on image
+        //on tile[1]: distributor(c_inIO, c_outIO, c_control, buttChan, ledChan);//thread to coordinate work on image
+        on tile[1]: distributorNew2(c_inIO, buttChan);//thread to coordinate work on image
       }
 
       return 0;
