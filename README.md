@@ -5,13 +5,13 @@ Game Of Life
 
 ### Code
 
-[] bitpacking
-[] button/orientation/LED behaviour
-[] larger images
-[] different from master/slave
+[ ] bitpacking
+[ ] button/orientation/LED behaviour
+[ ] larger images
+[x] different from master/slave
 
 ### Report
 
-[] Functionality & Design
-[] Tests & Experiments
-[] Critical Analysis
+[ ] Functionality & Design
+[ ] Tests & Experiments
+[ ] Critical Analysis
