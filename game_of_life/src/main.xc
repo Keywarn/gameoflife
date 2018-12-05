@@ -106,12 +106,11 @@ typedef interface buttI {
     int isButtDown(int b);
 } buttI;
 
-void buttonServer(server buttI myButt, chanend buttChan) {
+void buttServer(server buttI myButt, chanend buttChan) {
     int buttDown = 0;
     while (1) {
         select {
             case myButt.isButtDown(int b) -> int ret:
-                printf("checking if button %d is down\n", b);
                 ret = b == buttDown ? 1 : 0;
                 break;
             case buttChan :> int b:
@@ -307,47 +306,54 @@ void workerNew2 (int workerId, uchar part[PART_SIZE][IMWD], chanend farmer, chan
      * LOOP
      */
     for (int i=0; i < ITER; i++) {
-        // if is even
-        if(workerId % 2 == 0) {
-            // send -> below
-            for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
-            printf("WORKER %d: even; sent to below\n", workerId);
-            // receive BOTTOM from below
-            for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
+        select {
+            case farmer :> int something:
+                printf("wow something happened");
+                break;
+            default:
+                // if is even
+                if(workerId % 2 == 0) {
+                    // send -> below
+                    for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+                    printf("WORKER %d: even; sent to below\n", workerId);
+                    // receive BOTTOM from below
+                    for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
 
-            // send -> above
-            for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
-            // receive TOP from above
-            for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
-        }else{
-            // receive TOP from above
-            for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
-            printf("WORKER %d: odd; recieved from above\n", workerId);
-            // send -> top
-            for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
+                    // send -> above
+                    for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
+                    // receive TOP from above
+                    for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
+                }else{
+                    // receive TOP from above
+                    for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
+                    printf("WORKER %d: odd; recieved from above\n", workerId);
+                    // send -> top
+                    for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
 
-            // receive BOTTOM from below
-            for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
-            // send -> below
-            for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+                    // receive BOTTOM from below
+                    for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
+                    // send -> below
+                    for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+                }
+
+                // process GoL
+                uchar tempPart[PART_SIZE][IMWD];
+                for (int y=0; y < PART_SIZE; y++) {
+                    for (int x=0; x < IMWD; x++) {
+                        tempPart[y][x] = dead;
+                        int neighbours = getNeighboursSplit(curPart, curAbove, curBelow, x, y);
+                        int isAlive = curPart[y][x] == alive;
+
+                        if (neighbours < 2 && isAlive) tempPart[y][x] = dead;
+                        else if (isAlive && (neighbours == 2 || neighbours == 3)) tempPart[y][x] = alive;
+                        else if(neighbours > 3 && isAlive) tempPart[y][x] = dead;
+                        else if(neighbours == 3 && !isAlive) tempPart[y][x] = alive;
+                    }
+                }
+                // copy tempPart -> current
+                memcpy(&curPart, &tempPart, sizeof(tempPart));
+                break;
         }
-
-        // process GoL
-        uchar tempPart[PART_SIZE][IMWD];
-        for (int y=0; y < PART_SIZE; y++) {
-            for (int x=0; x < IMWD; x++) {
-                tempPart[y][x] = dead;
-                int neighbours = getNeighboursSplit(curPart, curAbove, curBelow, x, y);
-                int isAlive = curPart[y][x] == alive;
-
-                if (neighbours < 2 && isAlive) tempPart[y][x] = dead;
-                else if (isAlive && (neighbours == 2 || neighbours == 3)) tempPart[y][x] = alive;
-                else if(neighbours > 3 && isAlive) tempPart[y][x] = dead;
-                else if(neighbours == 3 && !isAlive) tempPart[y][x] = alive;
-            }
-        }
-        // copy tempPart -> current
-        memcpy(&curPart, &tempPart, sizeof(tempPart));
     }
 
     /*
@@ -361,7 +367,7 @@ void workerNew2 (int workerId, uchar part[PART_SIZE][IMWD], chanend farmer, chan
     }
 }
 
-void farmerNew2 (chanend workers[], chanend c_out) {
+void farmerNew2 (chanend workers[], chanend c_out, client buttI buttInt) {
     /*
      * SETUP
      */
@@ -374,6 +380,14 @@ void farmerNew2 (chanend workers[], chanend c_out) {
         case buttChan :> int btn:
             printf("%d", btn);
     }*/
+    while (1) {
+        if (buttInt.isButtDown(3)) {
+            printf("button is down!\n");
+            for (int s=0; s < SPLIT; s++) {
+                workers[s] <: 1;
+            }
+        }
+    }
 
     /*
      * END
@@ -434,11 +448,14 @@ void distributorNew2 (chanend c_in, chanend c_out, chanend buttChan) {
     /*
      * LOOP
      */
+    // button interface
+    interface buttI buttInt;
     // par statement w/ farmer & workers
     chan workers[SPLIT];
     chan btw0_1, btw0_3, btw1_2, btw2_3;
     par {
-        farmerNew2(workers, c_out);
+        buttServer(buttInt, buttChan);
+        farmerNew2(workers, c_out, buttInt);
         workerNew2(0, mapParts[0], workers[0], btw0_3, btw0_1);
         workerNew2(1, mapParts[1], workers[1], btw0_1, btw1_2);
         workerNew2(2, mapParts[2], workers[2], btw1_2, btw2_3);
