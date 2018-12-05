@@ -13,7 +13,7 @@
 #define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  1                  //no. iterations
+#define ITER  5                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
 #define INFNAME "test.pgm"
@@ -288,39 +288,49 @@ void workerNew2 (int workerId, uchar part[PART_SIZE][IMWD], chanend farmer, chan
     /*
      * LOOP
      */
+    for (int i=0; i < ITER; i++) {
+        // if is even
+        if(workerId % 2 == 0) {
+            // send -> below
+            for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+            printf("WORKER %d: even; sent to below\n", workerId);
+            // receive BOTTOM from below
+            for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
 
-    // 1.
-    // if isEven? part
-    //      send -> below
-    //      recieve BOTTOM from below
-    // else
-    //      recieve TOP from above
-    //      send -> top
-    // 2.
-    // if isEven? part
-    //      send -> above
-    //      recieve TOP from above
-    // else
-    //      recieve BOTTOM from below
-    //      send -> below
+            // send -> above
+            for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
+            // receive TOP from above
+            for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
+        }else{
+            // receive TOP from above
+            for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
+            printf("WORKER %d: odd; recieved from above\n", workerId);
+            // send -> top
+            for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
 
-    if(workerId % 2 == 0) {
-        for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
-        printf("WORKER %d: even; sent to below\n", workerId);
-        for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
+            // receive BOTTOM from below
+            for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
+            // send -> below
+            for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+        }
 
-        for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
-        for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
-    }else{
-        for (int x=0; x < IMWD; x++) workAbove :> curAbove[x];
-        printf("WORKER %d: odd; recieved from above\n", workerId);
-        for (int x=0; x < IMWD; x++) workAbove <: curPart[0][x];
+        // process GoL
+        uchar tempPart[PART_SIZE][IMWD];
+        for (int y=0; y < PART_SIZE; y++) {
+            for (int x=0; x < IMWD; x++) {
+                tempPart[y][x] = dead;
+                int neighbours = getNeighboursSplit(curPart, curAbove, curBelow, x, y);
+                int isAlive = curPart[y][x] == alive;
 
-        for (int x=0; x < IMWD; x++) workBelow :> curBelow[x];
-        for (int x=0; x < IMWD; x++) workBelow <: curPart[PART_SIZE-1][x];
+                if (neighbours < 2 && isAlive) tempPart[y][x] = dead;
+                else if (isAlive && (neighbours == 2 || neighbours == 3)) tempPart[y][x] = alive;
+                else if(neighbours > 3 && isAlive) tempPart[y][x] = dead;
+                else if(neighbours == 3 && !isAlive) tempPart[y][x] = alive;
+            }
+        }
+        // copy tempPart -> current
+        memcpy(&curPart, &tempPart, sizeof(tempPart));
     }
-
-    // process GoL
 
     /*
      * END or INTERRUPT
