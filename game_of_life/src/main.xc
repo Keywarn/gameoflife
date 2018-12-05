@@ -354,7 +354,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
   printf( "Waiting for Button Press...\n" );
   int throw;
-  buttChan :> throw;
+  //buttChan :> throw;
   ledChan <: (uchar) LED_GREEN;
   //Read in and do something with your image values..
   //This just inverts every pixel, but you should
@@ -369,18 +369,6 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
       map[y][x] = val;
       //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
-  }
-
-  short packedMap[IMHT][IMWD/16];
-  for(int y = 0;y<IMHT;y++){
-      packRow(map[y],packedMap[y]);
-  }
-  for(int y = 0; y<IMHT;y++){
-      printf("Row: %d -> ", y);
-      for(int x = 0; x<IMWD; x++){
-          printf("%d", getBitRow(packedMap[y],x));
-      }
-      printf("\n");
   }
 
   ledChan <: (uchar) LED_GREEN;
@@ -437,12 +425,12 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   t :> _loop;
 
   // DEBUG PRINT STUFF
-  /*for (int y=0; y < IMHT; y++) {
+  for (int y=0; y < IMHT; y++) {
       for (int x=0; x < IMWD; x++) {
           printf("%d,\t", endMap[y][x]);
       }
       printf("\n");
-  }*/
+  }
 
   // copy back map
   for( int y = 0; y < IMHT; y++ ) {
