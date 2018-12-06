@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 16                  //image height
-#define IMWD 16                  //image width
+#define IMHT 128                  //image height
+#define IMWD 128                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  5                  //no. iterations
+#define ITER  10                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "test.pgm"
+#define INFNAME "128x128.pgm"
 
 typedef unsigned char uchar;
 
@@ -235,7 +235,7 @@ unsigned char * alias worker (unsigned char above[IMWD], unsigned char below[IMW
     }
 }
 
-void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short above[IMWD/16], short below[IMWD/16]) {
+void workerNew (int part, chanend dist) {
     /*
      * SETUP
      */
@@ -243,11 +243,28 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
     // memcpy init. values into own
     short currentRow[PART_SIZE][IMWD/16], currentAbove[IMWD/16], currentBelow[IMWD/16];
 
-    for(int y = 0; y< PART_SIZE; y++){
+    /*for(int y = 0; y< PART_SIZE; y++){
         memcpy(&currentRow[y], &row[y], sizeof(row[y]));
     }
     memcpy(&currentAbove, &above, sizeof(above));
-    memcpy(&currentBelow, &below, sizeof(below));
+    memcpy(&currentBelow, &below, sizeof(below));*/
+
+    // get part from dist
+    for (int y=0; y < PART_SIZE; y++) {
+        for (int x=0; x < IMWD/16; x++) {
+            dist :> currentRow[y][x];
+        }
+    }
+
+    // get above from dist
+    for (int x=0; x < IMWD/16; x++) {
+        dist :> currentAbove[x];
+    }
+
+    // get below from dist
+    for (int x=0; x < IMWD/16; x++) {
+        dist :> currentBelow[x];
+    }
 
     /*
      * LOOP
@@ -380,15 +397,13 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
 // Currently the function just inverts the image
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan, chanend ledChan)
+void distributor(chanend dist[SPLIT], chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan, chanend ledChan)
 {
   uchar val;
 
   // for timing
   unsigned int _setup, _loop, _end,
                 setup,  loop,  end;
-
-
 
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
@@ -417,6 +432,8 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   for(int y = 0;y<IMHT;y++){
       packRow(map[y],packedMap[y]);
   }
+
+  free(map);
   /*for(int y = 0; y<IMHT;y++){
       printf("Row: %d -> ", y);
       for(int x = 0; x<IMWD; x++){
@@ -433,7 +450,6 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   /*
    * INITIAL STEP
    */
-  chan dist[SPLIT];
 
   // split map into parts
   short mapParts[SPLIT][PART_SIZE][IMWD/16];
@@ -445,6 +461,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
       }
   }
 
+  free(packedMap);
 
   // create arrays of separate bottom & top rows for each part
   short rowBtms[SPLIT][IMWD/16], rowTops[SPLIT][IMWD/16];
@@ -467,16 +484,36 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   // passed to farmer & copied to
   short endMap[IMHT][IMWD/16];
   //printf("creating farmer and worker\n");
+
+  // send parts to workers
+    for (int s=0; s < SPLIT; s++) {
+        for (int y=0; y < PART_SIZE; y++) {
+            for (int x=0; x < IMWD/16; x++) {
+                dist[s] <: mapParts[s][y][x];
+            }
+        }
+    }
+
+    // send aboves to workers
+    for (int s=0; s < SPLIT; s++) {
+        for (int x=0; x < IMWD/16; x++) {
+            dist[s] <: rowTops[s][x];
+        }
+    }
+
+    // send belows to workers
+    for (int s=0; s < SPLIT; s++) {
+        for (int x=0; x < IMWD/16; x++) {
+            dist[s] <: rowBtms[s][x];
+        }
+    }
+
+
   par {
     farmerNew(dist, ledChan, endMap);
-    par (int f=0; f < 4; f++) {
-        workerNew(f,
-                dist[f],
-                mapParts[f],
-                rowBtms[f],
-                rowTops[f]);
-    }
   }
+
+
 
   t :> _loop;
 
@@ -620,6 +657,7 @@ int main(void) {
     //char infname[] = "test.pgm";     //put your input image path here
     //char outfname[] = "testout.pgm"; //put your output image path here
     chan c_inIO, c_outIO, c_control, buttChan, ledChan;    //extend your channel definitions here
+    chan dist[SPLIT];
 
     par {
         on tile[0]: buttonListener(buttons, buttChan);
@@ -628,7 +666,11 @@ int main(void) {
         on tile[0]: orientation(i2c[0],c_control);        //client thread reading orientation data
         on tile[0]: DataInStream(INFNAME, c_inIO);          //thread to read in a PGM image
         on tile[0]: DataOutStream(OUTFNAME, c_outIO);       //thread to write out a PGM image
-        on tile[1]: distributor(c_inIO, c_outIO, c_control, buttChan, ledChan);//thread to coordinate work on image
+        on tile[1]: distributor(dist, c_inIO, c_outIO, c_control, buttChan, ledChan);//thread to coordinate work on image
+        on tile[1]: workerNew(0, dist[0]);
+        on tile[1]: workerNew(1, dist[1]);
+        on tile[0]: workerNew(2, dist[2]);
+        on tile[0]: workerNew(3, dist[3]);
       }
 
       return 0;
