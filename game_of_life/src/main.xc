@@ -42,7 +42,7 @@ on tile[0] : out port leds = XS1_PORT_4F;//port for buttons
 
 enum direction {above, aboveRight, right, belowRight, below, belowLeft, left, aboveLeft};
 typedef enum direction direction;
-dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
+uchar dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
 
 enum state {alive = 255, dead = 0};
 typedef enum state state;
