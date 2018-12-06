@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 16                  //image height
-#define IMWD 16                  //image width
+#define IMHT 64                  //image height
+#define IMWD 64                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  2                  //no. iterations
+#define ITER  1                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "test.pgm"
+#define INFNAME "64x64.pgm"
 
 typedef unsigned char uchar;
 
@@ -380,14 +380,14 @@ void farmerNew2 (chanend workers[], chanend c_out, client buttI buttInt) {
         case buttChan :> int btn:
             printf("%d", btn);
     }*/
-    while (1) {
+    /*while (1) {
         if (buttInt.isButtDown(3)) {
             printf("button is down!\n");
             for (int s=0; s < SPLIT; s++) {
                 workers[s] <: 1;
             }
         }
-    }
+    }*/
 
     /*
      * END
@@ -435,12 +435,27 @@ void distributorNew2 (chanend c_in, chanend c_out, chanend buttChan) {
     // split map into parts
     uchar mapParts[SPLIT][PART_SIZE][IMWD];
     for (int s=0; s < SPLIT; s++) {
-        int yOffset = s * SPLIT;
+        int yOffset = s * PART_SIZE;
         for (int y=0; y < PART_SIZE; y++) {
             int actualY = y + yOffset;
             memcpy(&mapParts[s][y], &map[actualY], sizeof(map[actualY]));
         }
     }
+
+    for (int s=0; s < SPLIT; s++) {
+            printf("part: %d\n", s);
+            for (int y=0; y < PART_SIZE; y++) {
+                for (int x=0; x < IMWD; x++) {
+                    int val = mapParts[s][y][x];
+                    if (val == 255) {
+                        printf("%d,", 1);
+                    } else {
+                        printf("%d,", 0);
+                    }
+                }
+                printf("\n");
+            }
+        }
 
     // wait for button press
     //buttChan :> throw;
