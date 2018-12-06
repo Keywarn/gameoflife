@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 16                  //image height
-#define IMWD 16                  //image width
+#define IMHT 64                  //image height
+#define IMWD 64                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
 #define ITER  1                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "test.pgm"
+#define INFNAME "64x64.pgm"
 
 typedef unsigned char uchar;
 
@@ -71,7 +71,7 @@ void packRow(uchar row[IMWD], short packedRow[IMWD/16]){
     uchar section[16];
     for (int sections = 0; sections < IMWD/16; sections++){
         for (int i = 0; i < 16; i++){
-            section[i] = row[i];
+            section[i] = row[(sections*16) + i];
         }
        packedRow[sections] = packSection(section);
     }
@@ -94,9 +94,10 @@ void setBitRow(short row[IMWD/16], int pos, int val) {
     assert (val == 1 || val == 0);
 
     // clear bit
-    row[sectionIndex] = row[sectionIndex] & (~(1 << 15-pos));
+    //row[sectionIndex] = row[sectionIndex] & (~(1 << (15-(pos%16))));
     // set bit if val == 1
-    row[sectionIndex] = row[sectionIndex] | (val << 15-pos);
+    if (val) row[sectionIndex] = row[sectionIndex] | (val << (15-(pos%16)));
+    else     row[sectionIndex] = row[sectionIndex] & (val << (15-(pos%16)));
 }
 
 void modTest(){
@@ -251,7 +252,10 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
 
     // memcpy init. values into own
     short currentRow[PART_SIZE][IMWD/16], currentAbove[IMWD/16], currentBelow[IMWD/16];
-    memcpy(&currentRow, &row, sizeof(row));
+
+    for(int y = 0; y< PART_SIZE; y++){
+        memcpy(&currentRow[y], &row[y], sizeof(row[y]));
+    }
     memcpy(&currentAbove, &above, sizeof(above));
     memcpy(&currentBelow, &below, sizeof(below));
 
@@ -265,23 +269,51 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
         for (int y=0; y < PART_SIZE; y++) {
             for (int x=0; x < IMWD/16; x++) {
 
-                newRow[y][x] = 0;
+                //newRow[y][x] = 0;
+                memcpy(&newRow[y][x],&currentRow[y][x], sizeof(currentRow[y][x]));
                 //INSERT LOGIC HERE
-                for (int i = 0; i < 16; i++){
+                /*for (int i = 0; i < 16; i++){
 
                     int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y, i);
+
                     int isAlive = getBitRow(currentRow[y],(x*16)+i);
 
-                    if (neighbours < 2 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
-                    else if (isAlive && (neighbours == 2 || neighbours == 3)) setBitRow(newRow[y], i + (x*16), 1);
-                    else if(neighbours > 3 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
-                    else if(neighbours == 3 && !isAlive) setBitRow(newRow[y], i + (x*16), 1);
-                }
+                    if(!isAlive) {
+                        if(neighbours == 3) {
+                            setBitRow(newRow[y], i + (x*16), 1);
+                            assert(getBitRow(newRow[y], i + (x*16)) == 1);
+                        }
+                        else {
+                            setBitRow(newRow[y], i + (x*16), 0);
+                            assert(getBitRow(newRow[y], i + (x*16)) == 0);
+                        }
+                    }else {
+                        if (neighbours == 2 || neighbours == 3) {
+                            setBitRow(newRow[y], i + (x*16), 1);
+                            assert(getBitRow(newRow[y], i + (x*16)) == 1);
+                        }   else {
+                            setBitRow(newRow[y], i + (x*16), 0);
+                            assert(getBitRow(newRow[y], i + (x*16)) == 0);
+                            }
+                        }
+
+                }*/
             }
         }
 
         // copy newRow -> current
-        memcpy(&currentRow, &newRow, sizeof(newRow));
+        for(int y = 0; y < PART_SIZE; y++) {
+            memcpy(&currentRow[y], &newRow[y], sizeof(newRow[y]));
+//            for(int x = 0; x < IMWD/16; x++){
+//                memcpy(&currentRow[y][x], &newRow[y][x], sizeof(newRow[y][x]));
+//            }
+        }
+        //memcpy(&currentRow, &newRow, sizeof(newRow));
+//        for (int x = 0, x < IMWD/16; x++) {
+//            for (int i = 0; i < 16; i++) {
+//                printf("%d", getBitRow(currentRow[14]))
+//            }
+//        }
 
         // send row
         master {
@@ -314,16 +346,27 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
     for (int i=0; i<ITER; i++) {
         ledChan <: (uchar) LED_GREEN_SEP;
         // receive row
-        for (int i=0; i < SPLIT; i++) {
+        for (int s=0; s < SPLIT; s++) {
             slave {
                 int part = 0;
-                dist[i] :> part;
+                dist[s] :> part;
                 printf("recieved data from part %d\n", part);
                 for (int y=0; y < PART_SIZE; y++) {
                     for (int x=0; x < IMWD/16; x++) {
-                        dist[i] :> newMap[part][y][x];
+                        dist[s] :> newMap[part][y][x];
                     }
                 }
+            }
+        }
+        printf("\nTHE CODE IS HERE\n");
+        for (int s = 0; s < SPLIT; s++){
+            for (int y = 0; y < PART_SIZE; y++) {
+                for (int x = 0; x < IMWD/16; x++) {
+                    for (int i = 0; i < 16; i++){
+                        printf("%d", getBitRow(newMap[s][y], (x*16)+i));
+                    }
+                }
+            printf("\n");
             }
         }
 
@@ -342,23 +385,24 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
             master {
                 // btm
                 for (int x=0; x < IMWD/16; x++) {
-                    printf("Sending bottom row s=%d\n",s);
+                    //printf("Sending bottom row s=%d\n",s);
                     dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
                 }
                 // top
                 for (int x=0; x < IMWD/16; x++) {
-                    printf("Sending top row s=%d\n",s);
+                    //printf("Sending top row s=%d\n",s);
                     dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
                 }
             }
         }
     }
+    //for ()
     for (int s=0; s < SPLIT; s++) {
             for (int y=0; y < PART_SIZE; y++) {
                 int actualY = PART_SIZE * s + y;
 
                 for (int x=0; x < IMWD/16; x++) {
-                    printf("writing to endMap s: %d y: %d  x: %d\n", s, y, x);
+                    //printf("writing to endMap s: %d y: %d  x: %d\n", s, y, x);
                     endMap[actualY][x] = newMap[s][y][x];
                 }
             }
@@ -383,10 +427,6 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
                 setup,  loop,  end;
 
 
-  // TESTING STUFF
-  short stuff[] = {8, 1, 2};
-  setBitRow(stuff, 3, 1);
-  printf("\nAHHH: %d\n", stuff[0]);
 
   //Starting up and wait for tilting of the xCore-200 Explorer
   printf( "ProcessImage: Start, size = %dx%d\n", IMHT, IMWD );
@@ -404,10 +444,11 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   for( int y = 0; y < IMHT; y++ ) {   //go through all lines
     for( int x = 0; x < IMWD; x++ ) { //go through each pixel per line
       c_in :> val;                    //read the pixel value
-
+      //printf("%d,",val);
       map[y][x] = val;
       //c_out <: (uchar)( val ^ 0xFF ); //send some modified pixel out
     }
+    //printf("\n");
   }
 
   short packedMap[IMHT][IMWD/16];
@@ -488,12 +529,9 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
       for( int x = 0; x < IMWD/16; x++ ) {
           for (int i =0; i < 16; i++){
               uchar val = 255 * getBitRow(endMap[y],(x*16) +i);
-              //printf("Writing to image y: %d  x: %d  i: %d  val: %d\n", y, x, i, 255 * getBitRow(endMap[y],(x*16) +i));
-              //printf("%d,",255 * getBitRow(endMap[y],(x*16) +i));
               c_out <: val;
           }
       }
-      //printf("\n");
   }
 
   t :> _end;
@@ -597,16 +635,21 @@ void orientation( client interface i2c_master_if i2c, chanend toDist) {
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
-    /*
-    uchar testArray[32] = {0,255,0,255,255,255,0,0,255,0,0,0,255,0,0,255,0,255,0,255,255,255,0,0,255,0,0,0,255,0,0,255};
-    short testShort[2];
 
-    packRow(testArray, testShort);
 
-    for(int i = 0; i < 32; i++){
-        printf("i: %d -> %d\n", i, getBitRow(testShort, i));
-    }
-    */
+//    uchar testArray[64] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+//    short testShort[4];
+//
+//    packRow(testArray, testShort);
+//    setBitRow(testShort, 32, 1);
+//    printf("\nTESTING STUFF: \n");
+//
+//    for(int i = 0; i < 64; i++){
+//        printf("%d",getBitRow(testShort, i));
+//    }
+//
+//    printf("\nTHE BIT 32 was: %d\n", getBitRow(testShort, 32));
+
 
     i2c_master_if i2c[1];               //interface to orientation
 
