@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 64                  //image height
-#define IMWD 64                  //image width
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  1                  //no. iterations
+#define ITER  10                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "64x64.pgm"
+#define INFNAME "test.pgm"
 
 typedef unsigned char uchar;
 
@@ -200,27 +200,15 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
 }
 
 // where y is relative to PART_SIZE
-int getNeighbourSplit(short section[PART_SIZE][IMWD/16], short above[], short below[], int dir, int x, int y, int i) {
+int getNeighbourSplit(short section[PART_SIZE][IMWD/16], short above[IMWD/16], short below[IMWD/16], int dir, int x, int y, int i) {
 
     if (y == 0 && dirMod[dir][0] == -1) {
-        //------------------------------------------------------------------------------------------------------
-        //ADD LOGIC HERE, JUST A ONE LINER BUT BRAIN TOO DEAD TO MUDDLE THROUGH, SHOULD BE EASY
-        //------------------------------------------------------------------------------------------------------
-        //return above[mod(x, dirMod[dir][1], IMWD)] / alive;
         return getBitRow(above, mod((x*16) + i, dirMod[dir][1], IMWD));
-        return 0;
     }
     else if (y == PART_SIZE - 1 && dirMod[dir][0] == 1) {
-        //------------------------------------------------------------------------------------------------------
-        //ADD LOGIC HERE, JUST A ONE LINER BUT BRAIN TOO DEAD TO MUDDLE THROUGH, SHOULD BE EASY
-        //------------------------------------------------------------------------------------------------------
-        //return below[mod(x, dirMod[dir][1], IMWD)] / alive;
         return getBitRow(below, mod((x*16) + i, dirMod[dir][1], IMWD));
-        return 0;
     }
     else {
-        //printf("(%d, %d) -+> (,) -> (%d, %d)\n", x, y, mod(x, dirMod[dir][1], IMWD), y + dirMod[dir][0]);
-        //return section[y + dirMod[dir][0]][mod(x, dirMod[dir][1], IMWD)] / alive;
         return getBitRow(section[y + dirMod[dir][0]], mod((x*16) +i, dirMod[dir][1], IMWD));
     }
 }
@@ -269,35 +257,18 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
         for (int y=0; y < PART_SIZE; y++) {
             for (int x=0; x < IMWD/16; x++) {
 
-                //newRow[y][x] = 0;
-                memcpy(&newRow[y][x],&currentRow[y][x], sizeof(currentRow[y][x]));
+                newRow[y][x] = 0;
                 //INSERT LOGIC HERE
-                /*for (int i = 0; i < 16; i++){
+                for (int i = 0; i < 16; i++){
 
                     int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y, i);
-
                     int isAlive = getBitRow(currentRow[y],(x*16)+i);
 
-                    if(!isAlive) {
-                        if(neighbours == 3) {
-                            setBitRow(newRow[y], i + (x*16), 1);
-                            assert(getBitRow(newRow[y], i + (x*16)) == 1);
-                        }
-                        else {
-                            setBitRow(newRow[y], i + (x*16), 0);
-                            assert(getBitRow(newRow[y], i + (x*16)) == 0);
-                        }
-                    }else {
-                        if (neighbours == 2 || neighbours == 3) {
-                            setBitRow(newRow[y], i + (x*16), 1);
-                            assert(getBitRow(newRow[y], i + (x*16)) == 1);
-                        }   else {
-                            setBitRow(newRow[y], i + (x*16), 0);
-                            assert(getBitRow(newRow[y], i + (x*16)) == 0);
-                            }
-                        }
-
-                }*/
+                    if (neighbours < 2 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
+                    else if (isAlive && (neighbours == 2 || neighbours == 3)) setBitRow(newRow[y], i + (x*16), 1);
+                    else if(neighbours > 3 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
+                    else if(neighbours == 3 && !isAlive) setBitRow(newRow[y], i + (x*16), 1);
+                }
             }
         }
 
@@ -476,12 +447,14 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   // split map into parts
   short mapParts[SPLIT][PART_SIZE][IMWD/16];
   for (int s=0; s < SPLIT; s++) {
-      int yOffset = s * SPLIT;
+      int yOffset = s * PART_SIZE;
       for (int y=0; y < PART_SIZE; y++) {
           int actualY = y + yOffset;
           memcpy(&mapParts[s][y], &packedMap[actualY], sizeof(packedMap[actualY]));
       }
   }
+
+
   // create arrays of separate bottom & top rows for each part
   short rowBtms[SPLIT][IMWD/16], rowTops[SPLIT][IMWD/16];
   for (int s=0; s < SPLIT; s++) {
