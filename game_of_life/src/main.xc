@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 64                  //image height
-#define IMWD 64                  //image width
+#define IMHT 16                  //image height
+#define IMWD 16                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
 #define ITER  5                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "64x64.pgm"
+#define INFNAME "test.pgm"
 
 typedef unsigned char uchar;
 
@@ -42,7 +42,7 @@ on tile[0] : out port leds = XS1_PORT_4F;//port for buttons
 
 enum direction {above, aboveRight, right, belowRight, below, belowLeft, left, aboveLeft};
 typedef enum direction direction;
-uchar dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
+dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
 
 enum state {alive = 255, dead = 0};
 typedef enum state state;
