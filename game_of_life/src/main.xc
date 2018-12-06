@@ -47,8 +47,6 @@ dirMod[8][2] = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
 enum state {alive = 255, dead = 0};
 typedef enum state state;
 
-
-
 uchar mod(uchar val, int dval, uchar divisor) {
     if(dval > 1 || dval < -1) {
         printf("Incorrect dval used, shutting down");
@@ -325,7 +323,7 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
             slave {
                 int part = 0;
                 dist[s] :> part;
-                printf("recieved data from part %d\n", part);
+                //printf("recieved data from part %d\n", part);
                 for (int y=0; y < PART_SIZE; y++) {
                     for (int x=0; x < IMWD/16; x++) {
                         dist[s] :> newMap[part][y][x];
@@ -372,7 +370,7 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
             }
         }
 
-    printf("\nFARMER: ended!\n");
+    //printf("\nFARMER: ended!\n");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -419,13 +417,13 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   for(int y = 0;y<IMHT;y++){
       packRow(map[y],packedMap[y]);
   }
-  for(int y = 0; y<IMHT;y++){
+  /*for(int y = 0; y<IMHT;y++){
       printf("Row: %d -> ", y);
       for(int x = 0; x<IMWD; x++){
           printf("%d", getBitRow(packedMap[y],x));
       }
       printf("\n");
-  }
+  }*/
 
   ledChan <: (uchar) LED_GREEN;
   unsigned time;
@@ -468,7 +466,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
    */
   // passed to farmer & copied to
   short endMap[IMHT][IMWD/16];
-  printf("creating farmer and worker\n");
+  //printf("creating farmer and worker\n");
   par {
     farmerNew(dist, ledChan, endMap);
     par (int f=0; f < 4; f++) {
