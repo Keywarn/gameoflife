@@ -9,14 +9,14 @@
 //#include "mod.h"
 #include "assert.h"
 
-#define IMHT 16                  //image height
-#define IMWD 16                  //image width
+#define IMHT 64                  //image height
+#define IMWD 64                  //image width
 #define SPLIT  4                 //how many parts to split the height into
 #define PART_SIZE (IMHT / SPLIT) //height of the part
-#define ITER  10                  //no. iterations
+#define ITER  5                  //no. iterations
 
 #define OUTFNAME "testout.pgm"
-#define INFNAME "test.pgm"
+#define INFNAME "64x64.pgm"
 
 typedef unsigned char uchar;
 
@@ -94,10 +94,12 @@ void setBitRow(short row[IMWD/16], int pos, int val) {
     assert (val == 1 || val == 0);
 
     // clear bit
-    //row[sectionIndex] = row[sectionIndex] & (~(1 << (15-(pos%16))));
+        row[sectionIndex] = row[sectionIndex] & (~(1 << 15-(pos%16)));
+        // set bit if val == 1
+        row[sectionIndex] = row[sectionIndex] | (val << 15-(pos%16));
     // set bit if val == 1
-    if (val) row[sectionIndex] = row[sectionIndex] | (val << (15-(pos%16)));
-    else     row[sectionIndex] = row[sectionIndex] & (val << (15-(pos%16)));
+    //if (val) row[sectionIndex] = row[sectionIndex] | (val << (15-(pos%16)));
+    //else     row[sectionIndex] = row[sectionIndex] & (val << (15-(pos%16)));
 }
 
 void modTest(){
@@ -203,9 +205,11 @@ int getNeighboursRow(uchar row[IMWD], uchar above[IMWD], uchar below[IMWD], int 
 int getNeighbourSplit(short section[PART_SIZE][IMWD/16], short above[IMWD/16], short below[IMWD/16], int dir, int x, int y, int i) {
 
     if (y == 0 && dirMod[dir][0] == -1) {
+        //printf("\nEDGE CASE\n");
         return getBitRow(above, mod((x*16) + i, dirMod[dir][1], IMWD));
     }
     else if (y == PART_SIZE - 1 && dirMod[dir][0] == 1) {
+        //printf("\nEDGE CASE\n");
         return getBitRow(below, mod((x*16) + i, dirMod[dir][1], IMWD));
     }
     else {
@@ -260,20 +264,20 @@ void workerNew (int part, chanend dist, short row[PART_SIZE][IMWD/16], short abo
                 newRow[y][x] = 0;
                 //INSERT LOGIC HERE
                 for (int i = 0; i < 16; i++){
+                    int absX = x * 16 + i;
 
                     int neighbours = getNeighboursSplit(currentRow, currentAbove, currentBelow, x, y, i);
-                    int isAlive = getBitRow(currentRow[y],(x*16)+i);
-
-                    if (neighbours < 2 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
-                    else if (isAlive && (neighbours == 2 || neighbours == 3)) setBitRow(newRow[y], i + (x*16), 1);
-                    else if(neighbours > 3 && isAlive) setBitRow(newRow[y], i + (x*16), 0);
-                    else if(neighbours == 3 && !isAlive) setBitRow(newRow[y], i + (x*16), 1);
+                    int isAlive = getBitRow(currentRow[y],absX);
+                    if (neighbours < 2 && isAlive) setBitRow(newRow[y], absX, 0);
+                    else if (isAlive && (neighbours == 2 || neighbours == 3)) setBitRow(newRow[y], absX, 1);
+                    else if(neighbours > 3 && isAlive) setBitRow(newRow[y], absX, 0);
+                    else if(neighbours == 3 && !isAlive) setBitRow(newRow[y], absX, 1);
                 }
             }
         }
 
         // copy newRow -> current
-        for(int y = 0; y < PART_SIZE; y++) {
+         for(int y = 0; y < PART_SIZE; y++) {
             memcpy(&currentRow[y], &newRow[y], sizeof(newRow[y]));
 //            for(int x = 0; x < IMWD/16; x++){
 //                memcpy(&currentRow[y][x], &newRow[y][x], sizeof(newRow[y][x]));
@@ -327,17 +331,6 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
                         dist[s] :> newMap[part][y][x];
                     }
                 }
-            }
-        }
-        printf("\nTHE CODE IS HERE\n");
-        for (int s = 0; s < SPLIT; s++){
-            for (int y = 0; y < PART_SIZE; y++) {
-                for (int x = 0; x < IMWD/16; x++) {
-                    for (int i = 0; i < 16; i++){
-                        printf("%d", getBitRow(newMap[s][y], (x*16)+i));
-                    }
-                }
-            printf("\n");
             }
         }
 
