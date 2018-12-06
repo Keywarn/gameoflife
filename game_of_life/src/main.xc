@@ -94,9 +94,9 @@ void setBitRow(short row[IMWD/16], int pos, int val) {
     assert (val == 1 || val == 0);
 
     // clear bit
-    row[sectionIndex] = row[sectionIndex] & (~(1 << pos));
+    row[sectionIndex] = row[sectionIndex] & (~(1 << 15-pos));
     // set bit if val == 1
-    row[sectionIndex] = row[sectionIndex] | (val << pos);
+    row[sectionIndex] = row[sectionIndex] | (val << 15-pos);
 }
 
 void modTest(){
@@ -318,7 +318,7 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
             slave {
                 int part = 0;
                 dist[i] :> part;
-
+                printf("recieved data from part %d\n", part);
                 for (int y=0; y < PART_SIZE; y++) {
                     for (int x=0; x < IMWD/16; x++) {
                         dist[i] :> newMap[part][y][x];
@@ -342,10 +342,12 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
             master {
                 // btm
                 for (int x=0; x < IMWD/16; x++) {
+                    printf("Sending bottom row s=%d\n",s);
                     dist[s] <: newMap[mod(s, -1, SPLIT)][PART_SIZE - 1][x];
                 }
                 // top
                 for (int x=0; x < IMWD/16; x++) {
+                    printf("Sending top row s=%d\n",s);
                     dist[s] <: newMap[mod(s, 1, SPLIT)][0][x];
                 }
             }
@@ -356,12 +358,13 @@ void farmerNew (chanend dist[], chanend ledChan, short endMap[IMHT][IMWD/16]) {
                 int actualY = PART_SIZE * s + y;
 
                 for (int x=0; x < IMWD/16; x++) {
+                    printf("writing to endMap s: %d y: %d  x: %d\n", s, y, x);
                     endMap[actualY][x] = newMap[s][y][x];
                 }
             }
         }
 
-    //printf("\nFARMER: ended!");
+    printf("\nFARMER: ended!\n");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -458,7 +461,7 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
    */
   // passed to farmer & copied to
   short endMap[IMHT][IMWD/16];
-
+  printf("creating farmer and worker\n");
   par {
     farmerNew(dist, ledChan, endMap);
     par (int f=0; f < 4; f++) {
@@ -482,9 +485,14 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
 
   // copy back map
   for( int y = 0; y < IMHT; y++ ) {
-      for( int x = 0; x < IMWD; x++ ) {
-          c_out <: getBitRow(endMap[y],x);
+      for( int x = 0; x < IMWD/16; x++ ) {
+          for (int i =0; i < 16; i++){
+              //printf("Writing to image y: %d  x: %d  i: %d  val: %d\n", y, x, i, 255 * getBitRow(endMap[y],(x*16) +i));
+              printf("%d,",255 * getBitRow(endMap[y],(x*16) +i));
+              //c_out <: 0;
+          }
       }
+      printf("\n");
   }
 
   t :> _end;
@@ -523,8 +531,10 @@ void DataOutStream(char outfname[], chanend c_in)
 
   //Compile each line of the image and write the image line-by-line
   for( int y = 0; y < IMHT; y++ ) {
-    for( int x = 0; x < IMWD; x++ ) {
-      c_in :> line[ x ];
+    for( int x = 0; x < IMWD/16; x++ ) {
+        for( int i = 0; i < 16; i++) {
+            c_in :> line[(x*16) + i];
+        }
     }
     _writeoutline( line, IMWD );
     //printf( "DataOutStream: Line written...\n" );         uncomment later
