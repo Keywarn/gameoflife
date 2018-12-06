@@ -487,12 +487,13 @@ void distributor(chanend c_in, chanend c_out, chanend fromAcc, chanend buttChan,
   for( int y = 0; y < IMHT; y++ ) {
       for( int x = 0; x < IMWD/16; x++ ) {
           for (int i =0; i < 16; i++){
+              uchar val = 255 * getBitRow(endMap[y],(x*16) +i);
               //printf("Writing to image y: %d  x: %d  i: %d  val: %d\n", y, x, i, 255 * getBitRow(endMap[y],(x*16) +i));
-              printf("%d,",255 * getBitRow(endMap[y],(x*16) +i));
-              //c_out <: 0;
+              //printf("%d,",255 * getBitRow(endMap[y],(x*16) +i));
+              c_out <: val;
           }
       }
-      printf("\n");
+      //printf("\n");
   }
 
   t :> _end;
