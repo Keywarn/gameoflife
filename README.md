@@ -1,17 +1,3 @@
 # gameoflife
-Game Of Life
 
-## TODO: 
-
-### Code
-
-[] bitpacking
-[] button/orientation/LED behaviour
-[] larger images
-[] different from master/slave
-
-### Report
-
-[] Functionality & Design
-[] Tests & Experiments
-[] Critical Analysis
+A concurrent implementation of Conway's Game of Life, writting in XC to be run on XMOS development boards.
